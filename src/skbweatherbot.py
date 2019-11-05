@@ -256,4 +256,13 @@ def wrong_content(message):
                      ]
     bot.send_sticker(message.chat.id, random.choice(stickers_list), reply_to_message_id=message.message_id, reply_markup=telebot.types.ReplyKeyboardRemove(selective=False))
 
-bot.polling()
+def telegram_polling():
+    try:
+        bot.polling(none_stop=True, timeout=60)
+    except:
+        bot.stop_polling()
+        time.sleep(10)
+        telegram_polling()
+
+if __name__ == '__main__':
+    telegram_polling()
