@@ -129,7 +129,7 @@ def send_action(message, action):
         try:
             bot.send_chat_action(message, action)
             break
-        except (ConnectionAbortedError, ConnectionResetError, ConnectionRefusedError, ConnectionError) as e:
+        except Exception as e:
             print("{} - Sending again after 5 seconds".format(e))
             time.sleep(5)
 
@@ -139,7 +139,7 @@ def repeat_send_msg(message, answer, **kwargs):
         try:
             bot.send_message(message, answer, **kwargs)
             break
-        except (ConnectionAbortedError, ConnectionResetError, ConnectionRefusedError, ConnectionError) as e:
+        except Exception as e:
             print("{} - Sending again after 5 seconds".format(e))
             time.sleep(5)
 
@@ -159,7 +159,7 @@ def repeat_reply_to(message, answer, **kwargs):
         try:
             bot.reply_to(message, answer, **kwargs)
             break
-        except (ConnectionAbortedError, ConnectionResetError, ConnectionRefusedError, ConnectionError) as e:
+        except Exception as e:
             print("{} - Sending again after 5 seconds".format(e))
             time.sleep(5)
 
@@ -179,7 +179,7 @@ def repeat_send_sticker(message, answer, **kwargs):
         try:
             bot.send_sticker(message, answer, **kwargs)
             break
-        except (ConnectionAbortedError, ConnectionResetError, ConnectionRefusedError, ConnectionError) as e:
+        except Exception as e:
             print("{} - Sending again after 5 seconds".format(e))
             time.sleep(5)
 
