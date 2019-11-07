@@ -97,8 +97,8 @@ async def handle(request):
 app.router.add_post('/{token}/', handle)
 
 # Bot body
-
 degree_sign = u'\N{DEGREE SIGN}'
+
 
 def icon_handler(icon):
     if "01d" in icon:
@@ -123,6 +123,75 @@ def icon_handler(icon):
         emoji = "\U0001F32B"
     return emoji
 
+
+def send_action(message, action):
+    while True:
+        try:
+            bot.send_chat_action(message, action)
+            break
+        except (ConnectionAbortedError, ConnectionResetError, ConnectionRefusedError, ConnectionError) as e:
+            print("{} - Sending again after 5 seconds".format(e))
+            time.sleep(5)
+
+
+def repeat_send_msg(message, answer, **kwargs):
+    while True:
+        try:
+            bot.send_message(message, answer, **kwargs)
+            break
+        except (ConnectionAbortedError, ConnectionResetError, ConnectionRefusedError, ConnectionError) as e:
+            print("{} - Sending again after 5 seconds".format(e))
+            time.sleep(5)
+
+
+def send_msg(message, answer, **kwargs):
+    kwargs_list=[i for i in kwargs.keys()]
+    if "reply_markup" in kwargs_list and "parse_mode" in kwargs_list:
+        repeat_send_msg(message, answer, reply_markup=kwargs["reply_markup"], parse_mode=kwargs["parse_mode"])
+    elif "reply_markup" in kwargs_list:
+        repeat_send_msg(message, answer, reply_markup=kwargs["reply_markup"])
+    else:
+        repeat_send_msg(message, answer)
+
+
+def repeat_reply_to(message, answer, **kwargs):
+    while True:
+        try:
+            bot.reply_to(message, answer, **kwargs)
+            break
+        except (ConnectionAbortedError, ConnectionResetError, ConnectionRefusedError, ConnectionError) as e:
+            print("{} - Sending again after 5 seconds".format(e))
+            time.sleep(5)
+
+
+def reply_to(message, answer, **kwargs):
+    kwargs_list=[i for i in kwargs.keys()]
+    if "reply_markup" in kwargs_list and "parse_mode" in kwargs_list:
+        repeat_reply_to(message, answer, reply_markup=kwargs["reply_markup"], parse_mode=kwargs["parse_mode"])
+    elif "reply_markup" in kwargs_list:
+        repeat_reply_to(message, answer, reply_markup=kwargs["reply_markup"])
+    else:
+        repeat_reply_to(message, answer)
+
+
+def repeat_send_sticker(message, answer, **kwargs):
+    while True:
+        try:
+            bot.send_sticker(message, answer, **kwargs)
+            break
+        except (ConnectionAbortedError, ConnectionResetError, ConnectionRefusedError, ConnectionError) as e:
+            print("{} - Sending again after 5 seconds".format(e))
+            time.sleep(5)
+
+
+def send_sticker(message, answer, **kwargs):
+    kwargs_list=[i for i in kwargs.keys()]
+    if "reply_to_message_id" in kwargs_list and "reply_markup" in kwargs_list:
+        repeat_send_sticker(message, answer, reply_to_message_id=kwargs["reply_to_message_id"], reply_markup=kwargs["reply_markup"])
+    else:
+        repeat_send_sticker(message, answer)
+
+
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
     keyboard = telebot.types.InlineKeyboardMarkup(row_width=2)
@@ -141,10 +210,11 @@ def send_welcome(message):
     answer += "\U0001F537 Прогноз на 3 дня - /forecast.\n"
     answer += "\U0001F537 Помощь - /help.\n"
     answer += "\U0001F537 Информации об авторе - /autor.\n"
-    bot.send_chat_action(message.chat.id, 'typing')
+    send_action(message.chat.id, 'typing')
     time.sleep(1)
-    bot.send_message(message.chat.id, answer, reply_markup=keyboard)
-    bot.send_sticker(message.chat.id, 'CAADAgADfQIAAvnkbAABcAABA648YQ08FgQ')
+    send_msg(message.chat.id, answer, reply_markup=keyboard)
+    send_sticker(message.chat.id, 'CAADAgADfQIAAvnkbAABcAABA648YQ08FgQ')
+
 
 @bot.message_handler(commands=["location"])
 def geo(message):
@@ -156,9 +226,10 @@ def geo(message):
     else:
         username = message.from_user.username
     answer = "{}, нажмите на кнопку '\U0001F310 location' для отправки местоположение\n".format(username.title())
-    bot.send_chat_action(message.chat.id, 'typing')
+    send_action(message.chat.id, 'typing')
     time.sleep(1)
-    bot.send_message(message.chat.id, answer, reply_markup=reply_keyboard)
+    send_msg(message.chat.id, answer, reply_markup=reply_keyboard)
+
 
 @bot.message_handler(commands=["forecast"], content_types=content_to_handle)
 def forecast(message):
@@ -171,10 +242,11 @@ def forecast(message):
         username = message.from_user.username
     answer = "{}, введите город для получения прогноза на 3 дня или\n".format(username.title())
     answer += "нажмите '\U0001F310 location' для отправки местоположение\n"
-    bot.send_chat_action(message.chat.id, 'typing')
+    send_action(message.chat.id, 'typing')
     time.sleep(1)
-    bot.send_message(message.chat.id, answer, reply_markup=reply_keyboard)
+    send_msg(message.chat.id, answer, reply_markup=reply_keyboard)
     bot.register_next_step_handler(message, send_forecast_weather)
+
 
 def send_forecast_weather(message):
     if message.from_user.first_name is not None:
@@ -189,19 +261,19 @@ def send_forecast_weather(message):
             answer = "{}, пожалуйста введите название города латиницей.\n".format(username.title())
             answer += "\U0001F537 Получения погоды по местоположению - '\U0001F310 location'.\n"
             answer += "\U0001F537 Помощь - help.\n"
-            bot.send_chat_action(message.chat.id, 'typing')
+            send_action(message.chat.id, 'typing')
             time.sleep(1)
-            bot.send_message(message.chat.id, answer, reply_markup=keyboard)
-            bot.send_sticker(message.chat.id, 'CAADAgADewIAAvnkbAABeDnKq9BHIbAWBA')
+            send_msg(message.chat.id, answer, reply_markup=keyboard)
+            send_sticker(message.chat.id, 'CAADAgADewIAAvnkbAABeDnKq9BHIbAWBA')
             bot.register_next_step_handler(message, send_forecast_weather)
         elif message.text is not None and message.text == '...':
             answer = "<b>{}</b> не найден!\n".format(str(message.text).capitalize())
             answer += "\U0001F537 Получения погоды по местоположению - '\U0001F310 location'.\n"
             answer += "\U0001F537 Помощь - help.\n"
-            bot.send_chat_action(message.chat.id, 'typing')
+            send_action(message.chat.id, 'typing')
             time.sleep(1)
-            bot.send_message(message.chat.id, answer, reply_markup=keyboard, parse_mode='HTML')
-            bot.send_sticker(message.chat.id, 'CAADAgADegIAAvnkbAABGyiSVUu1QfIWBA')
+            send_msg(message.chat.id, answer, reply_markup=keyboard, parse_mode='HTML')
+            send_sticker(message.chat.id, 'CAADAgADegIAAvnkbAABGyiSVUu1QfIWBA')
             bot.register_next_step_handler(message, send_forecast_weather)
         else:
             try:
@@ -213,10 +285,10 @@ def send_forecast_weather(message):
                 answer = "<b>{}</b> не найден!\n".format(str(message.text).capitalize())
                 answer += "\U0001F537 Получения погоды по местоположению - '\U0001F310 location'.\n"
                 answer += "\U0001F537 Помощь - help.\n"
-                bot.send_chat_action(message.chat.id, 'typing')
+                send_action(message.chat.id, 'typing')
                 time.sleep(1)
-                bot.send_message(message.chat.id, answer, reply_markup=keyboard, parse_mode='HTML')
-                bot.send_sticker(message.chat.id, 'CAADAgADegIAAvnkbAABGyiSVUu1QfIWBA')
+                send_msg(message.chat.id, answer, reply_markup=keyboard, parse_mode='HTML')
+                send_sticker(message.chat.id, 'CAADAgADegIAAvnkbAABGyiSVUu1QfIWBA')
                 bot.register_next_step_handler(message, send_forecast_weather)
             else:
                 location = forecast.get_forecast().get_location()
@@ -243,9 +315,9 @@ def send_forecast_weather(message):
                         answer += "\U0001F539 <i>Давление:</i> <b>{} мм</b>\n".format(forecast_pressure)
                         answer += "\U0001F539 <i>Влажность:</i> <b>{} %</b>\n".format(forecast_humidity)
                         answer += "\U0001F539 <i>Скорость ветра:</i> <b>{} м/c</b>\n\n".format(forecast_wind_speed)
-                bot.send_chat_action(message.chat.id, 'typing')
+                send_action(message.chat.id, 'typing')
                 time.sleep(1)
-                bot.reply_to(message, answer, reply_markup=telebot.types.ReplyKeyboardRemove(selective=False), parse_mode='HTML')
+                reply_to(message, answer, reply_markup=telebot.types.ReplyKeyboardRemove(selective=False), parse_mode='HTML')
     else:
         stickers_list = ['CAADAgAD3gEAAvnkbAAB9tAurz2ipZUWBA',
                          'CAADAgADpQEAAvnkbAAB3LCoSz9i3NQWBA',
@@ -257,10 +329,11 @@ def send_forecast_weather(message):
                          ]
         answer = "{}, прошу прощения, в данный момент сервис погоды не доступен!\n".format(username)
         answer += "Попробуйте позже\n"
-        bot.send_chat_action(message.chat.id, 'typing')
+        send_action(message.chat.id, 'typing')
         time.sleep(1)
-        bot.send_message(message.chat.id, answer, reply_markup=telebot.types.ReplyKeyboardRemove(selective=False,))
-        bot.send_sticker(message.chat.id, random.choice(stickers_list))
+        send_msg(message.chat.id, answer, reply_markup=telebot.types.ReplyKeyboardRemove(selective=False,))
+        send_sticker(message.chat.id, random.choice(stickers_list))
+
 
 @bot.message_handler(commands=['help'])
 def send_help(message):
@@ -278,20 +351,22 @@ def send_help(message):
     answer += "\U0001F537 Получения погоды по местоположению - /location.\n"
     answer += "\U0001F537 Прогноз на 3 дня - /forecast.\n"
     answer += "\U0001F537 Информации об авторе - /autor.\n"
-    bot.send_chat_action(message.chat.id, 'typing')
+    send_action(message.chat.id, 'typing')
     time.sleep(1)
-    bot.send_message(message.chat.id, answer, reply_markup=keyboard, parse_mode='HTML')
-    bot.send_sticker(message.chat.id, 'CAADAgADxwIAAvnkbAABx601cOaIcf8WBA')
+    send_msg(message.chat.id, answer, reply_markup=keyboard, parse_mode='HTML')
+    send_sticker(message.chat.id, 'CAADAgADxwIAAvnkbAABx601cOaIcf8WBA')
+
 
 @bot.message_handler(commands=['autor'])
 def send_autor(message):
     answer = "\U0001F537 Автор: <b>Eugene Skiba</b>\n"
     answer += "\U0001F537 Почта: skiba.eugene@gmail.com\n"
     answer += "\U0001F537 Телеграм: @phobbii"
-    bot.send_chat_action(message.chat.id, 'typing')
+    send_action(message.chat.id, 'typing')
     time.sleep(1)
-    bot.send_message(message.chat.id, answer, reply_markup=telebot.types.ReplyKeyboardRemove(selective=False), parse_mode='HTML')
-    bot.send_sticker(message.chat.id, 'CAADAgADtQEAAvnkbAABxHAP4NXF1FcWBA')
+    send_msg(message.chat.id, answer, reply_markup=telebot.types.ReplyKeyboardRemove(selective=False), parse_mode='HTML')
+    send_sticker(message.chat.id, 'CAADAgADtQEAAvnkbAABxHAP4NXF1FcWBA')
+
 
 @bot.callback_query_handler(func=lambda message: True)
 def callback_inline(message):
@@ -311,35 +386,35 @@ def callback_inline(message):
             answer += "\U0001F537 Получения погоды по местоположению - /location.\n"
             answer += "\U0001F537 Прогноз на 3 дня - /forecast.\n"
             answer += "\U0001F537 Информации об авторе - /autor.\n"
-            bot.send_chat_action(message.message.chat.id, 'typing')
+            send_action(message.message.chat.id, 'typing')
             time.sleep(1)
-            bot.send_message(message.message.chat.id, answer, reply_markup=keyboard, parse_mode='HTML')
-            bot.send_sticker(message.message.chat.id, 'CAADAgADxwIAAvnkbAABx601cOaIcf8WBA')
+            send_msg(message.message.chat.id, answer, reply_markup=keyboard, parse_mode='HTML')
+            send_sticker(message.message.chat.id, 'CAADAgADxwIAAvnkbAABx601cOaIcf8WBA')
         elif message.data == "autor":
             answer = "\U0001F537 Автор: <b>Eugene Skiba</b>\n"
             answer += "\U0001F537 Почта: skiba.eugene@gmail.com\n"
             answer += "\U0001F537 Телеграм: @phobbii"
-            bot.send_chat_action(message.message.chat.id, 'typing')
+            send_action(message.message.chat.id, 'typing')
             time.sleep(1)
-            bot.send_message(message.message.chat.id, answer, reply_markup=telebot.types.ReplyKeyboardRemove(selective=False), parse_mode='HTML')
-            bot.send_sticker(message.message.chat.id, 'CAADAgADtQEAAvnkbAABxHAP4NXF1FcWBA')
+            send_msg(message.message.chat.id, answer, reply_markup=telebot.types.ReplyKeyboardRemove(selective=False), parse_mode='HTML')
+            send_sticker(message.message.chat.id, 'CAADAgADtQEAAvnkbAABxHAP4NXF1FcWBA')
         elif message.data == "location":
             reply_keyboard = telebot.types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
             location = telebot.types.KeyboardButton(text="\U0001F310 location", request_location=True)
             reply_keyboard.add(location)
             answer = "{}, нажмите на кнопку '\U0001F310 location' для отправки местоположение\n".format(username.title())
-            bot.send_chat_action(message.message.chat.id, 'typing')
+            send_action(message.message.chat.id, 'typing')
             time.sleep(1)
-            bot.send_message(message.message.chat.id, answer, reply_markup=reply_keyboard)
+            send_msg(message.message.chat.id, answer, reply_markup=reply_keyboard)
         elif message.data == "forecast":
             reply_keyboard = telebot.types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
             location = telebot.types.KeyboardButton(text="\U0001F310 location", request_location=True)
             reply_keyboard.add(location)
             answer = "{}, введите город для получения прогноза на 3 дня или\n".format(username.title())
             answer += "нажмите '\U0001F310 location' для отправки местоположение\n"
-            bot.send_chat_action(message.message.chat.id, 'typing')
+            send_action(message.message.chat.id, 'typing')
             time.sleep(1)
-            bot.send_message(message.message.chat.id, answer, reply_markup=reply_keyboard)
+            send_msg(message.message.chat.id, answer, reply_markup=reply_keyboard)
             bot.register_next_step_handler(message.message, send_forecast_weather)
         elif message.data == "forecast_help":
             autor = telebot.types.InlineKeyboardButton(text="autor", callback_data="forecast_autor")
@@ -348,18 +423,19 @@ def callback_inline(message):
             answer += "\U0001F537 Пример: <b>Kharkiv</b>.\n"
             answer += "\U0001F537 Получения погоды по местоположению - '\U0001F310 location'.\n"
             answer += "\U0001F537 Информации об авторе - autor.\n"
-            bot.send_chat_action(message.message.chat.id, 'typing')
+            send_action(message.message.chat.id, 'typing')
             time.sleep(1)
-            bot.send_message(message.message.chat.id, answer, reply_markup=keyboard, parse_mode='HTML')
-            bot.send_sticker(message.message.chat.id, 'CAADAgADxwIAAvnkbAABx601cOaIcf8WBA')
+            send_msg(message.message.chat.id, answer, reply_markup=keyboard, parse_mode='HTML')
+            send_sticker(message.message.chat.id, 'CAADAgADxwIAAvnkbAABx601cOaIcf8WBA')
         elif message.data == "forecast_autor":
             answer = "\U0001F537 Автор: <b>Eugene Skiba</b>\n"
             answer += "\U0001F537 Почта: skiba.eugene@gmail.com\n"
             answer += "\U0001F537 Телеграм: @phobbii"
-            bot.send_chat_action(message.message.chat.id, 'typing')
+            send_action(message.message.chat.id, 'typing')
             time.sleep(1)
-            bot.send_message(message.message.chat.id, answer, parse_mode='HTML')
-            bot.send_sticker(message.message.chat.id, 'CAADAgADtQEAAvnkbAABxHAP4NXF1FcWBA')
+            send_msg(message.message.chat.id, answer, parse_mode='HTML')
+            send_sticker(message.message.chat.id, 'CAADAgADtQEAAvnkbAABxHAP4NXF1FcWBA')
+
 
 @bot.message_handler(func=lambda message: True, content_types=content_to_handle)
 def send_weather(message):
@@ -378,19 +454,19 @@ def send_weather(message):
             answer += "\U0001F537 Получения погоды по местоположению - /location.\n"
             answer += "\U0001F537 Прогноз на 3 дня - /forecast.\n"
             answer += "\U0001F537 Помощь - /help.\n"
-            bot.send_chat_action(message.chat.id, 'typing')
+            send_action(message.chat.id, 'typing')
             time.sleep(1)
-            bot.send_message(message.chat.id, answer, reply_markup=keyboard)
-            bot.send_sticker(message.chat.id, 'CAADAgADewIAAvnkbAABeDnKq9BHIbAWBA')
+            send_msg(message.chat.id, answer, reply_markup=keyboard)
+            send_sticker(message.chat.id, 'CAADAgADewIAAvnkbAABeDnKq9BHIbAWBA')
         elif message.text is not None and message.text == '...':
             answer = "<b>{}</b> не найден!\n".format(str(message.text).capitalize())
             answer += "\U0001F537 Получения погоды по местоположению - /location.\n"
             answer += "\U0001F537 Прогноз на 3 дня - /forecast.\n"
             answer += "\U0001F537 Помощь - /help.\n"
-            bot.send_chat_action(message.chat.id, 'typing')
+            send_action(message.chat.id, 'typing')
             time.sleep(1)
-            bot.send_message(message.chat.id, answer, reply_markup=keyboard, parse_mode='HTML')
-            bot.send_sticker(message.chat.id, 'CAADAgADegIAAvnkbAABGyiSVUu1QfIWBA')
+            send_msg(message.chat.id, answer, reply_markup=keyboard, parse_mode='HTML')
+            send_sticker(message.chat.id, 'CAADAgADegIAAvnkbAABGyiSVUu1QfIWBA')
         else:
             try:
                 if message.location is not None:
@@ -402,10 +478,10 @@ def send_weather(message):
                 answer += "\U0001F537 Получения погоды по местоположению - /location.\n"
                 answer += "\U0001F537 Прогноз на 3 дня - /forecast.\n"
                 answer += "\U0001F537 Помощь - /help.\n"
-                bot.send_chat_action(message.chat.id, 'typing')
+                send_action(message.chat.id, 'typing')
                 time.sleep(1)
-                bot.send_message(message.chat.id, answer, reply_markup=keyboard, parse_mode='HTML')
-                bot.send_sticker(message.chat.id, 'CAADAgADegIAAvnkbAABGyiSVUu1QfIWBA')
+                send_msg(message.chat.id, answer, reply_markup=keyboard, parse_mode='HTML')
+                send_sticker(message.chat.id, 'CAADAgADegIAAvnkbAABGyiSVUu1QfIWBA')
             else:
                 location = observation.get_location()
                 tf = timezonefinder.TimezoneFinder()
@@ -429,9 +505,9 @@ def send_weather(message):
                 answer += "\U0001F539 <i>Давление:</i> <b>{} мм</b>\n".format(pressure)
                 answer += "\U0001F539 <i>Влажность:</i> <b>{} %</b>\n".format(humidity)
                 answer += "\U0001F539 <i>Скорость ветра:</i> <b>{} м/c</b>\n\n".format(wind_speed)
-                bot.send_chat_action(message.chat.id, 'typing')
+                send_action(message.chat.id, 'typing')
                 time.sleep(1)
-                bot.reply_to(message, answer, reply_markup=telebot.types.ReplyKeyboardRemove(selective=False), parse_mode='HTML')
+                reply_to(message, answer, reply_markup=telebot.types.ReplyKeyboardRemove(selective=False), parse_mode='HTML')
     else:
         stickers_list = ['CAADAgAD3gEAAvnkbAAB9tAurz2ipZUWBA',
                          'CAADAgADpQEAAvnkbAAB3LCoSz9i3NQWBA',
@@ -443,10 +519,11 @@ def send_weather(message):
                          ]
         answer = "{}, прошу прощения, в данный момент сервис погоды не доступен!\n".format(username)
         answer += "Попробуйте позже\n"
-        bot.send_chat_action(message.chat.id, 'typing')
+        send_action(message.chat.id, 'typing')
         time.sleep(1)
-        bot.send_message(message.chat.id, answer, reply_markup=telebot.types.ReplyKeyboardRemove(selective=False,))
-        bot.send_sticker(message.chat.id, random.choice(stickers_list))
+        send_msg(message.chat.id, answer, reply_markup=telebot.types.ReplyKeyboardRemove(selective=False))
+        send_sticker(message.chat.id, random.choice(stickers_list))
+
 
 @bot.message_handler(func=lambda message: True, content_types=content_to_reject)
 def wrong_content(message):
@@ -462,7 +539,7 @@ def wrong_content(message):
                      'CAADAgADJAEAAvnkbAAB2fxXBcKZT08WBA',
                      'CAADAgADNAEAAvnkbAABdiR2Dg6Dxc8WBA'
                      ]
-    bot.send_sticker(message.chat.id, random.choice(stickers_list), reply_to_message_id=message.message_id, reply_markup=telebot.types.ReplyKeyboardRemove(selective=False))
+    send_sticker(message.chat.id, random.choice(stickers_list), reply_to_message_id=message.message_id, reply_markup=telebot.types.ReplyKeyboardRemove(selective=False))
 
 bot.remove_webhook()
 bot.set_webhook(url=WEBHOOK_URL_BASE + WEBHOOK_URL_PATH, certificate=open(WEBHOOK_SSL_CERT, 'r'))
