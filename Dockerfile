@@ -22,5 +22,5 @@ RUN mkdir -p $BOT_HOME \
 
 COPY skbweatherbot.py $BOT_HOME
 
-EXPOSE 8443
+EXPOSE $WEBHOOK_PORT
 CMD [ "python", "./skbweatherbot.py" ]
