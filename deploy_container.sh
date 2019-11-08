@@ -68,7 +68,7 @@ done
 [[ -z "${OWM_KEY}" ]] && error "Missing argument: --owm"
 [[ -z "${TELEBOT_KEY}" ]] && error "Missing argument: --telegram"
 [[ -z "${HTTPS_PORT}" ]] && error "Missing argument: --port"
-[[ ! "${HTTPS_PORT}" =~ ^[0-9]+$ || "${#HTTPS_PORT}" -lt 2 || "${#HTTPS_PORT}" -gt 5 ]] && error "Invalid port: ${HTTPS_PORT}"
+[[ ! "${HTTPS_PORT}" =~ ^[0-9]+$ || "${#HTTPS_PORT}" -lt 3 || "${#HTTPS_PORT}" -gt 5 ]] && error "Invalid port: ${HTTPS_PORT}"
 
 # Main block
 if [[ $(uname -s) -eq "Linux" ]]; then
