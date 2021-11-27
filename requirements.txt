@@ -1,0 +1,6 @@
+pytelegrambotapi
+pyowm
+datetime
+pytz
+tzwhere
+aiohttp
