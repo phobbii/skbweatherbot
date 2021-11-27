@@ -259,7 +259,7 @@ def send_forecast_weather(message):
         keyboard.add(help)
         if message.text is not None and bool(re.search('[\u0400-\u04FF]', message.text)) == True:
             answer = "{}, пожалуйста введите название города латиницей.\n".format(username.title())
-            answer += "\U0001F537 Получения погоды по местоположению - '\U0001F310 location'.\n"
+            answer += "\U0001F537 Прогноз погоды по местоположению - '\U0001F310 location'.\n"
             answer += "\U0001F537 Помощь - help.\n"
             send_action(message.chat.id, 'typing')
             time.sleep(1)
@@ -268,7 +268,7 @@ def send_forecast_weather(message):
             bot.register_next_step_handler(message, send_forecast_weather)
         elif message.text is not None and message.text == '...':
             answer = "<b>{}</b> не найден!\n".format(str(message.text).capitalize())
-            answer += "\U0001F537 Получения погоды по местоположению - '\U0001F310 location'.\n"
+            answer += "\U0001F537 Прогноз погоды по местоположению - '\U0001F310 location'.\n"
             answer += "\U0001F537 Помощь - help.\n"
             send_action(message.chat.id, 'typing')
             time.sleep(1)
@@ -283,7 +283,7 @@ def send_forecast_weather(message):
                     forecast = owm.three_hours_forecast(message.text)
             except Exception:
                 answer = "<b>{}</b> не найден!\n".format(str(message.text).capitalize())
-                answer += "\U0001F537 Получения погоды по местоположению - '\U0001F310 location'.\n"
+                answer += "\U0001F537 Прогноз погоды по местоположению - '\U0001F310 location'.\n"
                 answer += "\U0001F537 Помощь - help.\n"
                 send_action(message.chat.id, 'typing')
                 time.sleep(1)
@@ -348,7 +348,7 @@ def send_help(message):
         username = message.from_user.username
     answer = "{}, введите название города латиницей.\n".format(username.title())
     answer += "\U0001F537 Пример: <b>Kharkiv</b>.\n"
-    answer += "\U0001F537 Получения погоды по местоположению - /location.\n"
+    answer += "\U0001F537 Прогноз погоды по местоположению - /location.\n"
     answer += "\U0001F537 Прогноз на 3 дня - /forecast.\n"
     answer += "\U0001F537 Информации об авторе - /autor.\n"
     send_action(message.chat.id, 'typing')
@@ -359,9 +359,10 @@ def send_help(message):
 
 @bot.message_handler(commands=['autor'])
 def send_autor(message):
-    answer = "\U0001F537 Автор: <b>Eugene Skiba</b>\n"
-    answer += "\U0001F537 Почта: skiba.eugene@gmail.com\n"
-    answer += "\U0001F537 Телеграм: @phobbii"
+    answer = "\U0001F537 Autor: <b>Yevhen Skyba</b>\n"
+    answer += "\U0001F537 Email: skiba.eugene@gmail.com\n"
+    answer += "\U0001F537 LinkedIn: https://www.linkedin.com/in/yevhen-skyba/"
+    answer += "\U0001F537 Telegram: @phobbii"
     send_action(message.chat.id, 'typing')
     time.sleep(1)
     send_msg(message.chat.id, answer, reply_markup=telebot.types.ReplyKeyboardRemove(selective=False), parse_mode='HTML')
@@ -383,7 +384,7 @@ def callback_inline(message):
             keyboard.add(location, forecast, autor)
             answer = "{}, введите название города латиницей.\n".format(username.title())
             answer += "\U0001F537 Пример: <b>Kharkiv</b>.\n"
-            answer += "\U0001F537 Получения погоды по местоположению - /location.\n"
+            answer += "\U0001F537 Прогноз погоды по местоположению - /location.\n"
             answer += "\U0001F537 Прогноз на 3 дня - /forecast.\n"
             answer += "\U0001F537 Информации об авторе - /autor.\n"
             send_action(message.message.chat.id, 'typing')
@@ -391,9 +392,10 @@ def callback_inline(message):
             send_msg(message.message.chat.id, answer, reply_markup=keyboard, parse_mode='HTML')
             send_sticker(message.message.chat.id, 'CAADAgADxwIAAvnkbAABx601cOaIcf8WBA')
         elif message.data == "autor":
-            answer = "\U0001F537 Автор: <b>Eugene Skiba</b>\n"
-            answer += "\U0001F537 Почта: skiba.eugene@gmail.com\n"
-            answer += "\U0001F537 Телеграм: @phobbii"
+            answer = "\U0001F537 Autor: <b>Yevhen Skyba</b>\n"
+            answer += "\U0001F537 Email: skiba.eugene@gmail.com\n"
+            answer += "\U0001F537 LinkedIn: https://www.linkedin.com/in/yevhen-skyba/"
+            answer += "\U0001F537 Telegram: @phobbii"
             send_action(message.message.chat.id, 'typing')
             time.sleep(1)
             send_msg(message.message.chat.id, answer, reply_markup=telebot.types.ReplyKeyboardRemove(selective=False), parse_mode='HTML')
@@ -421,16 +423,17 @@ def callback_inline(message):
             keyboard.add(autor)
             answer = "{}, введите название города латиницей.\n".format(username.title())
             answer += "\U0001F537 Пример: <b>Kharkiv</b>.\n"
-            answer += "\U0001F537 Получения погоды по местоположению - '\U0001F310 location'.\n"
+            answer += "\U0001F537 Прогноз погоды по местоположению - '\U0001F310 location'.\n"
             answer += "\U0001F537 Информации об авторе - autor.\n"
             send_action(message.message.chat.id, 'typing')
             time.sleep(1)
             send_msg(message.message.chat.id, answer, reply_markup=keyboard, parse_mode='HTML')
             send_sticker(message.message.chat.id, 'CAADAgADxwIAAvnkbAABx601cOaIcf8WBA')
         elif message.data == "forecast_autor":
-            answer = "\U0001F537 Автор: <b>Eugene Skiba</b>\n"
-            answer += "\U0001F537 Почта: skiba.eugene@gmail.com\n"
-            answer += "\U0001F537 Телеграм: @phobbii"
+            answer = "\U0001F537 Autor: <b>Yevhen Skyba</b>\n"
+            answer += "\U0001F537 Email: skiba.eugene@gmail.com\n"
+            answer += "\U0001F537 LinkedIn: https://www.linkedin.com/in/yevhen-skyba/"
+            answer += "\U0001F537 Telegram: @phobbii"
             send_action(message.message.chat.id, 'typing')
             time.sleep(1)
             send_msg(message.message.chat.id, answer, parse_mode='HTML')
@@ -451,7 +454,7 @@ def send_weather(message):
         keyboard.add(location, forecast, help)
         if message.text is not None and bool(re.search('[\u0400-\u04FF]', message.text)) == True:
             answer = "{}, пожалуйста введите название города латиницей.\n".format(username.title())
-            answer += "\U0001F537 Получения погоды по местоположению - /location.\n"
+            answer += "\U0001F537 Прогноз погоды по местоположению - /location.\n"
             answer += "\U0001F537 Прогноз на 3 дня - /forecast.\n"
             answer += "\U0001F537 Помощь - /help.\n"
             send_action(message.chat.id, 'typing')
@@ -460,7 +463,7 @@ def send_weather(message):
             send_sticker(message.chat.id, 'CAADAgADewIAAvnkbAABeDnKq9BHIbAWBA')
         elif message.text is not None and message.text == '...':
             answer = "<b>{}</b> не найден!\n".format(str(message.text).capitalize())
-            answer += "\U0001F537 Получения погоды по местоположению - /location.\n"
+            answer += "\U0001F537 Прогноз погоды по местоположению - /location.\n"
             answer += "\U0001F537 Прогноз на 3 дня - /forecast.\n"
             answer += "\U0001F537 Помощь - /help.\n"
             send_action(message.chat.id, 'typing')
@@ -475,7 +478,7 @@ def send_weather(message):
                     observation = owm.weather_at_place(message.text)
             except Exception:
                 answer = "<b>{}</b> не найден!\n".format(str(message.text).capitalize())
-                answer += "\U0001F537 Получения погоды по местоположению - /location.\n"
+                answer += "\U0001F537 Прогноз погоды по местоположению - /location.\n"
                 answer += "\U0001F537 Прогноз на 3 дня - /forecast.\n"
                 answer += "\U0001F537 Помощь - /help.\n"
                 send_action(message.chat.id, 'typing')
