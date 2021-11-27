@@ -5,7 +5,6 @@ ARG ALPINE_VERSION="3.14"
 ARG WEBHOOK_LISTEN="0.0.0.0"
 ARG OWN_KEY
 ARG TELEBOT_KEY
-ARG WEBHOOK_HOST
 ARG WEBHOOK_PORT
 
 # Stage 1
@@ -15,7 +14,6 @@ LABEL org.opencontainers.image.authors="Yevhen Skyba <skiba.eugene@gmail.com>"
 # Include global args in this stage of the build
 ARG BOT_HOME="/opt/weatherbot"
 ARG TELEBOT_KEY
-ARG WEBHOOK_HOST
 ARG WEBHOOK_PORT
 
 # Create bot home
@@ -35,19 +33,18 @@ RUN openssl req -newkey rsa:2048 -sha256 -nodes -keyout ${BOT_HOME}/url_private.
 
 # Stage 2
 FROM base
+LABEL org.opencontainers.image.authors="Yevhen Skyba <skiba.eugene@gmail.com>"
 
 # Include global args in this stage of the build
 ARG BOT_HOME="/opt/weatherbot"
 ARG WEBHOOK_LISTEN="0.0.0.0"
 ARG OWN_KEY
 ARG TELEBOT_KEY
-ARG WEBHOOK_HOST
 ARG WEBHOOK_PORT
 
 # Define environment variables
 ENV OWN_KEY ${OWN_KEY}
 ENV TELEBOT_KEY ${TELEBOT_KEY}
-ENV WEBHOOK_HOST ${WEBHOOK_HOST}
 ENV WEBHOOK_PORT ${WEBHOOK_PORT}
 ENV WEBHOOK_LISTEN ${WEBHOOK_LISTEN}
 
