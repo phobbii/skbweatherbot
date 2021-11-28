@@ -350,7 +350,7 @@ def send_help(message):
 def send_autor(message):
     answer = "\U0001F537 Autor: <b>Yevhen Skyba</b>\n"
     answer += "\U0001F537 Email: skiba.eugene@gmail.com\n"
-    answer += "\U0001F537 LinkedIn: https://www.linkedin.com/in/yevhen-skyba/"
+    answer += "\U0001F537 LinkedIn: https://www.linkedin.com/in/yevhen-skyba/\n"
     answer += "\U0001F537 Telegram: @phobbii"
     send_action(message.chat.id, 'typing')
     time.sleep(1)
@@ -383,7 +383,7 @@ def callback_inline(message):
         elif message.data == "autor":
             answer = "\U0001F537 Autor: <b>Yevhen Skyba</b>\n"
             answer += "\U0001F537 Email: skiba.eugene@gmail.com\n"
-            answer += "\U0001F537 LinkedIn: https://www.linkedin.com/in/yevhen-skyba/"
+            answer += "\U0001F537 LinkedIn: https://www.linkedin.com/in/yevhen-skyba/\n"
             answer += "\U0001F537 Telegram: @phobbii"
             send_action(message.message.chat.id, 'typing')
             time.sleep(1)
@@ -421,7 +421,7 @@ def callback_inline(message):
         elif message.data == "forecast_autor":
             answer = "\U0001F537 Autor: <b>Yevhen Skyba</b>\n"
             answer += "\U0001F537 Email: skiba.eugene@gmail.com\n"
-            answer += "\U0001F537 LinkedIn: https://www.linkedin.com/in/yevhen-skyba/"
+            answer += "\U0001F537 LinkedIn: https://www.linkedin.com/in/yevhen-skyba/\n"
             answer += "\U0001F537 Telegram: @phobbii"
             send_action(message.message.chat.id, 'typing')
             time.sleep(1)
