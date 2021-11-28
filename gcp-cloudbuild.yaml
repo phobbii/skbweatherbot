@@ -35,14 +35,14 @@ steps:
             --restart-on-failure --container-image=$_SERVICE_IMAGE --container-restart-policy="always"
     else
         if [[ $(gcloud compute instances list --filter="name=('NAME' $_INSTANCE_NAME)" | awk '{print$6}' | sed 1d) == "TERMINATED" ]]; then
-            gcloud compute instances delete $_INSTANCE_NAME --zone $_SERVICE_REGION-$_SERVICE_ZONE
+            gcloud compute instances delete $_INSTANCE_NAME --zone $_SERVICE_REGION-$_SERVICE_ZONE --quiet
             gcloud compute instances create-with-container $_INSTANCE_NAME --machine-type=$_INSTANCE_TYPE \
                 --image=$_INSTANCE_IMAGE --zone=$_SERVICE_REGION-$_SERVICE_ZONE --labels=$_INSTANCE_LABELS \
                 --maintenance-policy=$_INSTANCE_MAINTANANCE_POLICY --address=$_PUBLIC_STATIC_IP --network-tier=$_NETWORK_TIER \
                 --restart-on-failure --container-image=$_SERVICE_IMAGE --container-restart-policy="always"
             gcloud compute instances stop $_INSTANCE_NAME --zone $_SERVICE_REGION-$_SERVICE_ZONE
         elif [[ $(gcloud compute instances list --filter="name=('NAME' $_INSTANCE_NAME)" | awk '{print$6}' | sed 1d) == "RUNNING" ]]; then
-            gcloud compute instances delete $_INSTANCE_NAME --zone $_SERVICE_REGION-$_SERVICE_ZONE
+            gcloud compute instances delete $_INSTANCE_NAME --zone $_SERVICE_REGION-$_SERVICE_ZONE --quiet
             gcloud compute instances create-with-container $_INSTANCE_NAME --machine-type=$_INSTANCE_TYPE \
                 --image=$_INSTANCE_IMAGE --zone=$_SERVICE_REGION-$_SERVICE_ZONE --labels=$_INSTANCE_LABELS \
                 --maintenance-policy=$_INSTANCE_MAINTANANCE_POLICY --address=$_PUBLIC_STATIC_IP --network-tier=$_NETWORK_TIER \
