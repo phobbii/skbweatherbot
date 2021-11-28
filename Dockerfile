@@ -1,5 +1,6 @@
 # Define global args
 ARG BOT_HOME="/opt/weatherbot/"
+ARG BOT_USR="botusr"
 ARG PY_VERSION="3.9.9"
 ARG ALPINE_VERSION="3.14"
 ARG WEBHOOK_LISTEN="0.0.0.0"
@@ -14,12 +15,18 @@ LABEL org.opencontainers.image.authors="Yevhen Skyba <skiba.eugene@gmail.com>"
 
 # Include global args in this stage of the build
 ARG BOT_HOME="/opt/weatherbot/"
+ARG BOT_USR="botusr"
 ARG TELEBOT_KEY
 ARG WEBHOOK_HOST
 ARG WEBHOOK_PORT
 
-# Create bot home
-RUN mkdir -p ${BOT_HOME} 
+# Set root
+USER root
+
+# Create bot home and user
+RUN mkdir -p ${BOT_HOME} \
+    && addgroup -S ${BOT_USR} \
+    && adduser -S ${BOT_USR} -G ${BOT_USR}
 
 # Install openssl dependencies
 RUN apk add --no-cache \
@@ -50,6 +57,9 @@ ENV TELEBOT_KEY ${TELEBOT_KEY}
 ENV WEBHOOK_PORT ${WEBHOOK_PORT}
 ENV WEBHOOK_LISTEN ${WEBHOOK_LISTEN}
 
+# Set root
+USER root
+
 # Set working directory to bot home
 WORKDIR ${BOT_HOME}
 
@@ -61,8 +71,12 @@ COPY requirements.txt skbweatherbot.py ${BOT_HOME}
 
 # Install bot dependencies
 RUN apk add --no-cache geos \
+    && chown -R ${BOT_USR}. ${BOT_HOME} \
     && pip install -r requirements.txt \
     && rm -rf requirements.txt
+
+# Set service user
+USER ${BOT_USR}
 
 EXPOSE ${WEBHOOK_PORT}
 ENTRYPOINT [ "python" ]
