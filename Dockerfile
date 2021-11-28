@@ -21,7 +21,7 @@ ARG WEBHOOK_PORT
 # Create bot home
 RUN mkdir -p ${BOT_HOME} 
 
-# Install dependencies
+# Install openssl dependencies
 RUN apk add --no-cache \
     curl \
     openssl
