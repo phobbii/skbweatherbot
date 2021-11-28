@@ -77,11 +77,8 @@ if [[ $(uname -s) -eq "Linux" ]]; then
         exit
     else
         if [[ $(compgen -c | grep -x "docker") ]]; then
-            SERVER_VERSION=$(docker version -f "{{.Server.Version}}")
-            SERVER_VERSION_MAJOR=$(echo "$SERVER_VERSION"| cut -d'.' -f 1)
-            SERVER_VERSION_MINOR=$(echo "$SERVER_VERSION"| cut -d'.' -f 2)
-            SERVER_VERSION_BUILD=$(echo "$SERVER_VERSION"| cut -d'.' -f 3)
-            if [ "${SERVER_VERSION_MAJOR}" -ge 17 ] && [ "${SERVER_VERSION_MINOR}" -ge 5 ] && [ "${SERVER_VERSION_BUILD}" -ge 0 ]; then
+            SERVER_VERSION=$(docker version -f "{{.Server.Version}}" | cut -d'.' -f 1 )
+            if [[ "${SERVER_VERSION}" -ge 17 ]]; then
                 if [[ -f $(find . -maxdepth 1 -name "Dockerfile") ]] && [[ -f $(find . -maxdepth 1 -name "*.py") ]]; then
                     docker build --build-arg OWN_KEY="${OWM_KEY}" --build-arg TELEBOT_KEY="${TELEBOT_KEY}" --build-arg WEBHOOK_HOST="$(curl -s ifconfig.co)" --build-arg WEBHOOK_PORT="${HTTPS_PORT}" -t skbweatherbot . > /dev/null 2>&1
                     if [[ -n $(docker images | grep "skbweatherbot" | awk '{print $3}') ]]; then
