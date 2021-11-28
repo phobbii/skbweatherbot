@@ -2,7 +2,7 @@ steps:
 # Docker build image
 - name: 'gcr.io/cloud-builders/docker'
   id: BUILD
-  args: ['build', '--build-arg', 'OWN_KEY=$_OWM_KEY', '--build-arg', 'TELEBOT_KEY=$_TELEBOT_KEY', '--build-arg', 'WEBHOOK_HOST=$_PUBLIC_STATIC_IP', '--build-arg', 'WEBHOOK_PORT=$_HTTPS_PORT', '-t', '$_SERVICE_IMAGE', '.', '-f', 'Dockerfile']
+  args: ['build', '--build-arg OWN_KEY=$_OWM_KEY', '--build-arg TELEBOT_KEY=$_TELEBOT_KEY', '--build-arg WEBHOOK_HOST=$_PUBLIC_STATIC_IP', '--build-arg WEBHOOK_PORT=$_HTTPS_PORT', '-t', '$_SERVICE_IMAGE', '.', '-f', 'Dockerfile']
 
 substitutions:
     _SERVICE_IMAGE        : ${_SERVICE_REGION}-docker.pkg.dev/${PROJECT_ID}/${_SERVICE_REPO_NAME}/${_SERVICE_NAME}:${SHORT_SHA}
