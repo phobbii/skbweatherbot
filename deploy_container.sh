@@ -85,6 +85,7 @@ if [[ $(uname -s) -eq "Linux" ]]; then
                     if [[ -n $(docker images skbweatherbot:${docker_tag} -q) ]]; then
                         echo "${GREEN}Bot image skbweatherbot:${docker_tag} built successfully${RESET}"
                         docker run -d --restart=always --name skbweatherbot -p $HTTPS_PORT:$HTTPS_PORT $(docker images skbweatherbot:${docker_tag} -q) > /dev/null 2>&1
+                        sleep 5
                         if [[ $(docker ps -a | grep skbweatherbot | awk '{print $8}') == "Up" ]]; then
                             echo "${GREEN}Bot container deployed successfully${RESET}"
                         else
