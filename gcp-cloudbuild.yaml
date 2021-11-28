@@ -6,7 +6,11 @@ steps:
   args:
   - '-c'
   - |- 
-    gcloud artifacts docker images list $_SERVICE_REPO | awk '{print$1}' | sed 1d
+    if [[ -n $(gcloud artifacts docker images list $_SERVICE_REPO | awk '{print$1}' | sed 1d) ]]; then
+        gcloud artifacts docker images delete $_SERVICE_REPO/$_SERVICE_NAME --quiet
+    else
+        echo "$_SERVICE_REPO repo is empty. Clean skipped"
+    fi
 
 # # Docker build image
 # - name: 'gcr.io/cloud-builders/docker'
