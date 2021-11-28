@@ -27,7 +27,7 @@ steps:
   id: PUSH
   args: ['push', '$_SERVICE_IMAGE']
 
-# Deploy image
+# Deploy image to instance
 - name: 'gcr.io/cloud-builders/gcloud'
   id: DEPLOY
   entrypoint: 'bash'
