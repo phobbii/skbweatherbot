@@ -1,6 +1,5 @@
 pytelegrambotapi
-pyowm
+pyowm==2.10.0
 datetime
-pytz
 tzwhere
 aiohttp
