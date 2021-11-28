@@ -11,12 +11,12 @@ WORKDIR $BOT_HOME
 
 RUN mkdir -p $BOT_HOME \
     && pip install --upgrade pip \
-    && pip install pytelegrambotapi \
-    && pip install pyowm \
-    && pip install datetime \
-    && pip install pytz \
-    && pip install timezonefinder \
-    && pip install aiohttp \
+    && pip install pytelegrambotapi==4.2.0 \
+    && pip install pyowm==2.10.0 \
+    && pip install datetime==4.3 \
+    && pip install pytz==2021.3 \
+    && pip install timezonefinder==5.2.0 \
+    && pip install aiohttp==3.8.1 \
     && openssl req -newkey rsa:2048 -sha256 -nodes -keyout $BOT_HOME/url_private.key -x509 -days 3560 -out $BOT_HOME/url_certificate.pem -subj "/C=AU/ST=Some-State/O=Internet Widgits Pty Ltd/CN=$WEBHOOK_HOST"\
     && curl -s -F "url=https://$WEBHOOK_HOST:$WEBHOOK_PORT" -F "certificate=@url_certificate.pem" https://api.telegram.org/bot$TELEBOT_KEY/setWebhook
 
