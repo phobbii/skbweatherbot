@@ -1,43 +1,66 @@
 steps:
-# # Remove old docker images
-# - name: 'gcr.io/cloud-builders/gcloud'
-#   id: CLEAN REPO
-#   entrypoint: 'bash'
-#   args:
-#   - '-c'
-#   - |- 
-#     if [[ -n $(gcloud artifacts docker images list $_SERVICE_REPO | awk '{print$1}' | sed 1d) ]]; then
-#         gcloud artifacts docker images delete $_SERVICE_REPO/$_SERVICE_REPO_NAME --quiet
-#     else
-#         echo "$_SERVICE_REPO repo is empty. Clean skipped"
-#     fi
+# Remove old docker images
+- name: 'gcr.io/cloud-builders/gcloud'
+  id: CLEAN REPO
+  entrypoint: 'bash'
+  args:
+  - '-c'
+  - |- 
+    if [[ -n $(gcloud artifacts docker images list $_SERVICE_REPO | awk '{print$1}' | sed 1d) ]]; then
+        gcloud artifacts docker images delete $_SERVICE_REPO/$_SERVICE_REPO_NAME --quiet
+    else
+        echo "$_SERVICE_REPO repo is empty. Clean skipped"
+    fi
 
-# # Docker build image
-# - name: 'gcr.io/cloud-builders/docker'
-#   id: BUILD
-#   args: ['build', '--build-arg', 'OWN_KEY=$_OWM_KEY', '--build-arg', 'TELEBOT_KEY=$_TELEBOT_KEY', '--build-arg', 'WEBHOOK_HOST=$_PUBLIC_STATIC_IP', '--build-arg', 'WEBHOOK_PORT=$_HTTPS_PORT', '-t', '$_SERVICE_IMAGE', '.', '-f', 'Dockerfile']
+# Docker build image
+- name: 'gcr.io/cloud-builders/docker'
+  id: BUILD
+  args: ['build', '--build-arg', 'OWN_KEY=$_OWM_KEY', '--build-arg', 'TELEBOT_KEY=$_TELEBOT_KEY', '--build-arg', 'WEBHOOK_HOST=$_PUBLIC_STATIC_IP', '--build-arg', 'WEBHOOK_PORT=$_HTTPS_PORT', '-t', '$_SERVICE_IMAGE', '.', '-f', 'Dockerfile']
 
-#   # Docker push image
-# - name: 'gcr.io/cloud-builders/docker'
-#   id: PUSH
-#   args: ['push', '$_SERVICE_IMAGE']
+  # Docker push image
+- name: 'gcr.io/cloud-builders/docker'
+  id: PUSH
+  args: ['push', '$_SERVICE_IMAGE']
  
 - name: 'gcr.io/cloud-builders/gcloud'
-  id: REMOVE INSTANCE
+  id: DEPLOY
   entrypoint: 'bash'
   args:
   - '-c'
   - |-
-    gcloud compute instances list --filter="name=('NAME' $_INSTANCE_NAME)" | awk '{print$6}' | sed 1d
+    if [[ -z $(gcloud compute instances list --filter="name=('NAME' $_INSTANCE_NAME)") ]]; then
+        gcloud compute instances create-with-container $_INSTANCE_NAME --machine-type=$_INSTANCE_TYPE \
+            --image=$_INSTANCE_IMAGE --zone=$_SERVICE_REGION-$_SERVICE_ZONE --labels=$_INSTANCE_LABELS \
+            --maintenance-policy=$_INSTANCE_MAINTANANCE_POLICY --address=$_PUBLIC_STATIC_IP --network-tier=$_NETWORK_TIER \
+            --restart-on-failure --container-image=$_SERVICE_IMAGE --container-restart-policy="always"
+    else
+        if [[ $(gcloud compute instances list --filter="name=('NAME' $_INSTANCE_NAME)" | awk '{print$6}' | sed 1d) == "TERMINATED" ]]; then
+            gcloud compute instances delete $_INSTANCE_NAME --zone $_SERVICE_REGION-$_SERVICE_ZONE
+            gcloud compute instances create-with-container $_INSTANCE_NAME --machine-type=$_INSTANCE_TYPE \
+                --image=$_INSTANCE_IMAGE --zone=$_SERVICE_REGION-$_SERVICE_ZONE --labels=$_INSTANCE_LABELS \
+                --maintenance-policy=$_INSTANCE_MAINTANANCE_POLICY --address=$_PUBLIC_STATIC_IP --network-tier=$_NETWORK_TIER \
+                --restart-on-failure --container-image=$_SERVICE_IMAGE --container-restart-policy="always"
+            gcloud compute instances stop $_INSTANCE_NAME --zone $_SERVICE_REGION-$_SERVICE_ZONE
+        elif [[ $(gcloud compute instances list --filter="name=('NAME' $_INSTANCE_NAME)" | awk '{print$6}' | sed 1d) == "RUNNING" ]]; then
+            gcloud compute instances delete $_INSTANCE_NAME --zone $_SERVICE_REGION-$_SERVICE_ZONE
+            gcloud compute instances create-with-container $_INSTANCE_NAME --machine-type=$_INSTANCE_TYPE \
+                --image=$_INSTANCE_IMAGE --zone=$_SERVICE_REGION-$_SERVICE_ZONE --labels=$_INSTANCE_LABELS \
+                --maintenance-policy=$_INSTANCE_MAINTANANCE_POLICY --address=$_PUBLIC_STATIC_IP --network-tier=$_NETWORK_TIER \
+                --restart-on-failure --container-image=$_SERVICE_IMAGE --container-restart-policy="always"
+        fi
+    fi
 
 substitutions:
-    _SERVICE_IMAGE     : ${_SERVICE_REPO}/${_SERVICE_REPO_NAME}:${SHORT_SHA}
-    _SERVICE_REPO      : ${_SERVICE_REGION}-docker.pkg.dev/${PROJECT_ID}/${_SERVICE_REPO_NAME}
-    _SERVICE_REGION    : us-east1
-    _SERVICE_ZONE      : b
-    _SERVICE_REPO_NAME : skbweatherbot
-    _OWM_KEY           : sdfsdfsdfsdf
-    _TELEBOT_KEY       : dsfsdfsdf
-    _INSTANCE_NAME     : dlinst01
-    _PUBLIC_STATIC_IP  : "35.231.130.232"
-    _HTTPS_PORT        : "8443"
+    _SERVICE_IMAGE               : ${_SERVICE_REPO}/${_SERVICE_REPO_NAME}:${SHORT_SHA}
+    _SERVICE_REPO                : ${_SERVICE_REGION}-docker.pkg.dev/${PROJECT_ID}/${_SERVICE_REPO_NAME}
+    _SERVICE_REGION              : us-east1
+    _SERVICE_ZONE                : b
+    _SERVICE_REPO_NAME           : skbweatherbot
+    _INSTANCE_NAME               : dlinst01
+    _INSTANCE_TYPE               : e2-micro
+    _INSTANCE_IMAGE              : projects/debian-cloud/global/images/debian-9-stretch-v20211105
+    _INSTANCE_LABELS             : scheduled=true
+    _INSTANCE_MAINTANANCE_POLICY : MIGRATE
+    _NETWORK_TIER                : PREMIUM
+    _PUBLIC_STATIC_IP            : "35.231.130.232"
+    _HTTPS_PORT                  : "8443"
