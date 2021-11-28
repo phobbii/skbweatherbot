@@ -31,21 +31,21 @@ steps:
   - |-
     if [[ -z $(gcloud compute instances list --filter="name=('NAME' $_INSTANCE_NAME)") ]]; then
         gcloud compute instances create-with-container $_INSTANCE_NAME --machine-type=$_INSTANCE_TYPE \
-            --image=$_INSTANCE_IMAGE --zone=$_SERVICE_REGION-$_SERVICE_ZONE --labels=$_INSTANCE_LABELS \
+            --image=$_INSTANCE_IMAGE --zone=$_SERVICE_REGION-$_SERVICE_ZONE --labels=$_INSTANCE_LABELS --tags=$_INSTANCE_NETWORK_TAGS\
             --maintenance-policy=$_INSTANCE_MAINTANANCE_POLICY --address=$_PUBLIC_STATIC_IP --network-tier=$_NETWORK_TIER \
             --restart-on-failure --container-image=$_SERVICE_IMAGE --container-restart-policy="always" --boot-disk-size=$_INSTANCE_DISK_SIZE
     else
         if [[ $(gcloud compute instances list --filter="name=('NAME' $_INSTANCE_NAME)" | awk '{print$6}' | sed 1d) == "TERMINATED" ]]; then
             gcloud compute instances delete $_INSTANCE_NAME --zone $_SERVICE_REGION-$_SERVICE_ZONE --quiet
             gcloud compute instances create-with-container $_INSTANCE_NAME --machine-type=$_INSTANCE_TYPE \
-                --image=$_INSTANCE_IMAGE --zone=$_SERVICE_REGION-$_SERVICE_ZONE --labels=$_INSTANCE_LABELS \
+                --image=$_INSTANCE_IMAGE --zone=$_SERVICE_REGION-$_SERVICE_ZONE --labels=$_INSTANCE_LABELS --tags=$_INSTANCE_NETWORK_TAGS\
                 --maintenance-policy=$_INSTANCE_MAINTANANCE_POLICY --address=$_PUBLIC_STATIC_IP --network-tier=$_NETWORK_TIER \
                 --restart-on-failure --container-image=$_SERVICE_IMAGE --container-restart-policy="always" --boot-disk-size=$_INSTANCE_DISK_SIZE
             gcloud compute instances stop $_INSTANCE_NAME --zone $_SERVICE_REGION-$_SERVICE_ZONE
         elif [[ $(gcloud compute instances list --filter="name=('NAME' $_INSTANCE_NAME)" | awk '{print$6}' | sed 1d) == "RUNNING" ]]; then
             gcloud compute instances delete $_INSTANCE_NAME --zone $_SERVICE_REGION-$_SERVICE_ZONE --quiet
             gcloud compute instances create-with-container $_INSTANCE_NAME --machine-type=$_INSTANCE_TYPE \
-                --image=$_INSTANCE_IMAGE --zone=$_SERVICE_REGION-$_SERVICE_ZONE --labels=$_INSTANCE_LABELS \
+                --image=$_INSTANCE_IMAGE --zone=$_SERVICE_REGION-$_SERVICE_ZONE --labels=$_INSTANCE_LABELS --tags=$_INSTANCE_NETWORK_TAGS \
                 --maintenance-policy=$_INSTANCE_MAINTANANCE_POLICY --address=$_PUBLIC_STATIC_IP --network-tier=$_NETWORK_TIER \
                 --restart-on-failure --container-image=$_SERVICE_IMAGE --container-restart-policy="always" --boot-disk-size=$_INSTANCE_DISK_SIZE
         fi
@@ -61,6 +61,7 @@ substitutions:
     _INSTANCE_TYPE               : e2-micro
     _INSTANCE_IMAGE              : projects/cos-cloud/global/images/cos-stable-93-16623-39-21
     _INSTANCE_LABELS             : scheduled=true
+    _INSTANCE_NETWORK_TAGS       : weatherbot
     _INSTANCE_MAINTANANCE_POLICY : MIGRATE
     _INSTANCE_DISK_SIZE          : "30"
     _NETWORK_TIER                : PREMIUM
