@@ -54,7 +54,7 @@ ENV WEBHOOK_LISTEN ${WEBHOOK_LISTEN}
 WORKDIR ${BOT_HOME}
 
 # Copy dependencies
-COPY --from=build ${BOT_HOME} ${BOT_HOME}
+COPY --from=base ${BOT_HOME} ${BOT_HOME}
 
 # Copy required files
 COPY requirements.txt skbweatherbot.py ${BOT_HOME}
