@@ -9,7 +9,7 @@ substitutions:
     _SERVICE_REGION       : us-east1
     _SERVICE_REPO_NAME    : skbweatherbot
     _SERVICE_NAME         : skbweatherbot
+    _OWM_KEY              : sdfsdfsdfsdf
+    _TELEBOT_KEY          : dsfsdfsdf
     _PUBLIC_STATIC_IP     : 35.231.130.232
     _HTTPS_PORT           : 8443
-    _TELEBOT_KEY          : dsfsdfsdf
-    _OWM_KEY              : sdfsdfsdfsdf
