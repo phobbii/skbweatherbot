@@ -1,56 +1,66 @@
 steps:
-# Remove old docker images
 - name: 'gcr.io/cloud-builders/gcloud'
-  id: CLEAN REPO
-  entrypoint: 'bash'
-  args:
-  - '-c'
-  - |- 
-    if [[ -n $(gcloud artifacts docker images list $_SERVICE_REPO | awk '{print$1}' | sed 1d) ]]; then
-        gcloud artifacts docker images delete $_SERVICE_REPO/$_SERVICE_REPO_NAME --quiet
-    else
-        echo "$_SERVICE_REPO repo is empty. Clean skipped"
-    fi
-
-# Docker build image
-- name: 'gcr.io/cloud-builders/docker'
-  id: BUILD
-  args: ['build', '--build-arg', 'OWN_KEY=$$OWM_KEY', '--build-arg', 'TELEBOT_KEY=$$TELEBOT_KEY', '--build-arg', 'WEBHOOK_HOST=$_PUBLIC_STATIC_IP', '--build-arg', 'WEBHOOK_PORT=$_HTTPS_PORT', '-t', '$_SERVICE_IMAGE', '.', '-f', 'Dockerfile']
   secretEnv: ['OWM_KEY', 'TELEBOT_KEY']
-
-# Docker push image
-- name: 'gcr.io/cloud-builders/docker'
-  id: PUSH
-  args: ['push', '$_SERVICE_IMAGE']
-
-# Deploy image
-- name: 'gcr.io/cloud-builders/gcloud'
   id: DEPLOY
   entrypoint: 'bash'
   args:
   - '-c'
-  - |-
-    if [[ -z $(gcloud compute instances list --filter="name=('NAME' $_INSTANCE_NAME)") ]]; then
-        gcloud compute instances create-with-container $_INSTANCE_NAME --machine-type=$_INSTANCE_TYPE \
-            --image=$_INSTANCE_IMAGE --zone=$_SERVICE_REGION-$_SERVICE_ZONE --labels=$_INSTANCE_LABELS --tags=$_INSTANCE_NETWORK_TAGS\
-            --maintenance-policy=$_INSTANCE_MAINTANANCE_POLICY --address=$_PUBLIC_STATIC_IP --network-tier=$_NETWORK_TIER \
-            --restart-on-failure --container-image=$_SERVICE_IMAGE --container-restart-policy="always" --boot-disk-size=$_INSTANCE_DISK_SIZE
-    else
-        if [[ $(gcloud compute instances list --filter="name=('NAME' $_INSTANCE_NAME)" | awk '{print$6}' | sed 1d) == "TERMINATED" ]]; then
-            gcloud compute instances delete $_INSTANCE_NAME --zone $_SERVICE_REGION-$_SERVICE_ZONE --quiet
-            gcloud compute instances create-with-container $_INSTANCE_NAME --machine-type=$_INSTANCE_TYPE \
-                --image=$_INSTANCE_IMAGE --zone=$_SERVICE_REGION-$_SERVICE_ZONE --labels=$_INSTANCE_LABELS --tags=$_INSTANCE_NETWORK_TAGS\
-                --maintenance-policy=$_INSTANCE_MAINTANANCE_POLICY --address=$_PUBLIC_STATIC_IP --network-tier=$_NETWORK_TIER \
-                --restart-on-failure --container-image=$_SERVICE_IMAGE --container-restart-policy="always" --boot-disk-size=$_INSTANCE_DISK_SIZE
-            gcloud compute instances stop $_INSTANCE_NAME --zone $_SERVICE_REGION-$_SERVICE_ZONE
-        elif [[ $(gcloud compute instances list --filter="name=('NAME' $_INSTANCE_NAME)" | awk '{print$6}' | sed 1d) == "RUNNING" ]]; then
-            gcloud compute instances delete $_INSTANCE_NAME --zone $_SERVICE_REGION-$_SERVICE_ZONE --quiet
-            gcloud compute instances create-with-container $_INSTANCE_NAME --machine-type=$_INSTANCE_TYPE \
-                --image=$_INSTANCE_IMAGE --zone=$_SERVICE_REGION-$_SERVICE_ZONE --labels=$_INSTANCE_LABELS --tags=$_INSTANCE_NETWORK_TAGS \
-                --maintenance-policy=$_INSTANCE_MAINTANANCE_POLICY --address=$_PUBLIC_STATIC_IP --network-tier=$_NETWORK_TIER \
-                --restart-on-failure --container-image=$_SERVICE_IMAGE --container-restart-policy="always" --boot-disk-size=$_INSTANCE_DISK_SIZE
-        fi
-    fi
+  - |- 
+    echo $$OWM_KEY
+    echo $$TELEBOT_KEY
+
+# # Remove old docker images
+# - name: 'gcr.io/cloud-builders/gcloud'
+#   id: CLEAN REPO
+#   entrypoint: 'bash'
+#   args:
+#   - '-c'
+#   - |- 
+#     if [[ -n $(gcloud artifacts docker images list $_SERVICE_REPO | awk '{print$1}' | sed 1d) ]]; then
+#         gcloud artifacts docker images delete $_SERVICE_REPO/$_SERVICE_REPO_NAME --quiet
+#     else
+#         echo "$_SERVICE_REPO repo is empty. Clean skipped"
+#     fi
+
+# # Docker build image
+# - name: 'gcr.io/cloud-builders/docker'
+#   id: BUILD
+#   args: ['build', '--build-arg', 'OWN_KEY=$$OWM_KEY', '--build-arg', 'TELEBOT_KEY=$$TELEBOT_KEY', '--build-arg', 'WEBHOOK_HOST=$_PUBLIC_STATIC_IP', '--build-arg', 'WEBHOOK_PORT=$_HTTPS_PORT', '-t', '$_SERVICE_IMAGE', '.', '-f', 'Dockerfile']
+#   secretEnv: ['OWM_KEY', 'TELEBOT_KEY']
+
+# # Docker push image
+# - name: 'gcr.io/cloud-builders/docker'
+#   id: PUSH
+#   args: ['push', '$_SERVICE_IMAGE']
+
+# # Deploy image
+# - name: 'gcr.io/cloud-builders/gcloud'
+#   id: DEPLOY
+#   entrypoint: 'bash'
+#   args:
+#   - '-c'
+#   - |-
+#     if [[ -z $(gcloud compute instances list --filter="name=('NAME' $_INSTANCE_NAME)") ]]; then
+#         gcloud compute instances create-with-container $_INSTANCE_NAME --machine-type=$_INSTANCE_TYPE \
+#             --image=$_INSTANCE_IMAGE --zone=$_SERVICE_REGION-$_SERVICE_ZONE --labels=$_INSTANCE_LABELS --tags=$_INSTANCE_NETWORK_TAGS\
+#             --maintenance-policy=$_INSTANCE_MAINTANANCE_POLICY --address=$_PUBLIC_STATIC_IP --network-tier=$_NETWORK_TIER \
+#             --restart-on-failure --container-image=$_SERVICE_IMAGE --container-restart-policy="always" --boot-disk-size=$_INSTANCE_DISK_SIZE
+#     else
+#         if [[ $(gcloud compute instances list --filter="name=('NAME' $_INSTANCE_NAME)" | awk '{print$6}' | sed 1d) == "TERMINATED" ]]; then
+#             gcloud compute instances delete $_INSTANCE_NAME --zone $_SERVICE_REGION-$_SERVICE_ZONE --quiet
+#             gcloud compute instances create-with-container $_INSTANCE_NAME --machine-type=$_INSTANCE_TYPE \
+#                 --image=$_INSTANCE_IMAGE --zone=$_SERVICE_REGION-$_SERVICE_ZONE --labels=$_INSTANCE_LABELS --tags=$_INSTANCE_NETWORK_TAGS\
+#                 --maintenance-policy=$_INSTANCE_MAINTANANCE_POLICY --address=$_PUBLIC_STATIC_IP --network-tier=$_NETWORK_TIER \
+#                 --restart-on-failure --container-image=$_SERVICE_IMAGE --container-restart-policy="always" --boot-disk-size=$_INSTANCE_DISK_SIZE
+#             gcloud compute instances stop $_INSTANCE_NAME --zone $_SERVICE_REGION-$_SERVICE_ZONE
+#         elif [[ $(gcloud compute instances list --filter="name=('NAME' $_INSTANCE_NAME)" | awk '{print$6}' | sed 1d) == "RUNNING" ]]; then
+#             gcloud compute instances delete $_INSTANCE_NAME --zone $_SERVICE_REGION-$_SERVICE_ZONE --quiet
+#             gcloud compute instances create-with-container $_INSTANCE_NAME --machine-type=$_INSTANCE_TYPE \
+#                 --image=$_INSTANCE_IMAGE --zone=$_SERVICE_REGION-$_SERVICE_ZONE --labels=$_INSTANCE_LABELS --tags=$_INSTANCE_NETWORK_TAGS \
+#                 --maintenance-policy=$_INSTANCE_MAINTANANCE_POLICY --address=$_PUBLIC_STATIC_IP --network-tier=$_NETWORK_TIER \
+#                 --restart-on-failure --container-image=$_SERVICE_IMAGE --container-restart-policy="always" --boot-disk-size=$_INSTANCE_DISK_SIZE
+#         fi
+#     fi
 
 availableSecrets:
   secretManager:
