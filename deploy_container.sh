@@ -83,7 +83,7 @@ if [[ $(uname -s) -eq "Linux" ]]; then
             SERVER_VERSION_BUILD=$(echo "$SERVER_VERSION"| cut -d'.' -f 3)
             if [ "${SERVER_VERSION_MAJOR}" -ge 17 ] && [ "${SERVER_VERSION_MINOR}" -ge 5 ] && [ "${SERVER_VERSION_BUILD}" -ge 0 ]; then
                 if [[ -f $(find . -maxdepth 1 -name "Dockerfile") ]] && [[ -f $(find . -maxdepth 1 -name "*.py") ]]; then
-                    docker build --build-arg OWN_KEY="${OWM_KEY}" --build-arg TELEBOT_KEY="${TELEBOT_KEY}" --build-arg WEBHOOK_PORT="${HTTPS_PORT}" -t skbweatherbot . > /dev/null 2>&1
+                    docker build --build-arg OWN_KEY="${OWM_KEY}" --build-arg TELEBOT_KEY="${TELEBOT_KEY}" --build-arg WEBHOOK_HOST="$(curl -s ifconfig.co)" --build-arg WEBHOOK_PORT="${HTTPS_PORT}" -t skbweatherbot . > /dev/null 2>&1
                     if [[ -n $(docker images | grep "skbweatherbot" | awk '{print $3}') ]]; then
                         echo "${GREEN}Bot image built successfully${RESET}"
                         docker run -d --restart=always --name skbweatherbot -p $HTTPS_PORT:$HTTPS_PORT $(docker images | grep "skbweatherbot" | awk '{print $3}') > /dev/null 2>&1

@@ -5,6 +5,7 @@ ARG ALPINE_VERSION="3.14"
 ARG WEBHOOK_LISTEN="0.0.0.0"
 ARG OWN_KEY
 ARG TELEBOT_KEY
+ARG WEBHOOK_HOST
 ARG WEBHOOK_PORT
 
 # Stage 1
@@ -14,6 +15,7 @@ LABEL org.opencontainers.image.authors="Yevhen Skyba <skiba.eugene@gmail.com>"
 # Include global args in this stage of the build
 ARG BOT_HOME="/opt/weatherbot"
 ARG TELEBOT_KEY
+ARG WEBHOOK_HOST
 ARG WEBHOOK_PORT
 
 # Create bot home
