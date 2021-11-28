@@ -8,7 +8,8 @@ steps:
   - 'pipefail'
   - '-c'
   - |- 
-    if [[ -n $(gcloud artifacts docker images list $_SERVICE_REPO | grep IMAGE | cut -d' ' -f2) ]]; then
+    img_list=$(gcloud artifacts docker images list $_SERVICE_REPO | grep IMAGE | cut -d' ' -f2) 
+    if [[ -n $img_list ]]; then
         gcloud artifacts docker images delete $_SERVICE_REPO/$_SERVICE_NAME --quiet
     else
         echo "$_SERVICE_REPO repo is empty. Clean skipped"
