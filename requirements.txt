@@ -1,5 +1,5 @@
-pytelegrambotapi
+pytelegrambotapi==4.2.0
 pyowm==2.10.0
-datetime
+datetime==4.3
 tzwhere
-aiohttp
+aiohttp==3.8.1
