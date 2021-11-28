@@ -6,9 +6,9 @@ steps:
   args:
   - '-c'
   - |- 
-    test=$(gcloud artifacts docker images list $_SERVICE_REPO | grep IMAGE | cut -d' ' -f2)
+    test=$(gcloud artifacts docker images list $_SERVICE_REPO | grep IMAGE)
     echo $test
-    gcloud artifacts docker images list $_SERVICE_REPO | grep IMAGE | cut -d' ' -f2
+    gcloud artifacts docker images list $_SERVICE_REPO | grep IMAGE
 
 # # Docker build image
 # - name: 'gcr.io/cloud-builders/docker'
