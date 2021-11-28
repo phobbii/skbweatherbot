@@ -80,10 +80,11 @@ if [[ $(uname -s) -eq "Linux" ]]; then
             SERVER_VERSION=$(docker version -f "{{.Server.Version}}" | cut -d'.' -f 1 )
             if [[ "${SERVER_VERSION}" -ge 17 ]]; then
                 if [[ -f $(find . -maxdepth 1 -name "Dockerfile") ]] && [[ -f $(find . -maxdepth 1 -name "*.py") ]]; then
-                    docker build --build-arg OWN_KEY="${OWM_KEY}" --build-arg TELEBOT_KEY="${TELEBOT_KEY}" --build-arg WEBHOOK_HOST="$(curl -s ifconfig.co)" --build-arg WEBHOOK_PORT="${HTTPS_PORT}" -t skbweatherbot . > /dev/null 2>&1
-                    if [[ -n $(docker images | grep "skbweatherbot" | awk '{print $3}') ]]; then
-                        echo "${GREEN}Bot image built successfully${RESET}"
-                        docker run -d --restart=always --name skbweatherbot -p $HTTPS_PORT:$HTTPS_PORT $(docker images | grep "skbweatherbot" | awk '{print $3}') > /dev/null 2>&1
+                    docker_tag=$(tr -dc a-z0-9 </dev/urandom | head -c 4; echo '')
+                    docker build --build-arg OWN_KEY="${OWM_KEY}" --build-arg TELEBOT_KEY="${TELEBOT_KEY}" --build-arg WEBHOOK_HOST="$(curl -s ifconfig.co)" --build-arg WEBHOOK_PORT="${HTTPS_PORT}" -t skbweatherbot:${docker_tag} . > /dev/null 2>&1
+                    if [[ -n $(docker images | grep "skbweatherbot:${docker_tag}" | awk '{print $3}') ]]; then
+                        echo "${GREEN}Bot image skbweatherbot:${docker_tag} built successfully${RESET}"
+                        docker run -d --restart=always --name skbweatherbot -p $HTTPS_PORT:$HTTPS_PORT $(docker images | grep "skbweatherbot:${docker_tag}" | awk '{print $3}') > /dev/null 2>&1
                         if [[ $(docker ps -a | grep skbweatherbot | awk '{print $8}') == "Up" ]]; then
                             echo "${GREEN}Bot container deployed successfully${RESET}"
                         else
