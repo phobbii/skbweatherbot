@@ -1,5 +1,5 @@
 # Define global args
-ARG BOT_HOME="/opt/weatherbot"
+ARG BOT_HOME="/opt/weatherbot/"
 ARG PY_VERSION="3.9.9"
 ARG ALPINE_VERSION="3.14"
 ARG WEBHOOK_LISTEN="0.0.0.0"
@@ -13,7 +13,7 @@ FROM python:${PY_VERSION}-alpine${ALPINE_VERSION} AS base
 LABEL org.opencontainers.image.authors="Yevhen Skyba <skiba.eugene@gmail.com>"
 
 # Include global args in this stage of the build
-ARG BOT_HOME="/opt/weatherbot"
+ARG BOT_HOME="/opt/weatherbot/"
 ARG TELEBOT_KEY
 ARG WEBHOOK_HOST
 ARG WEBHOOK_PORT
@@ -38,7 +38,7 @@ FROM base
 LABEL org.opencontainers.image.authors="Yevhen Skyba <skiba.eugene@gmail.com>"
 
 # Include global args in this stage of the build
-ARG BOT_HOME="/opt/weatherbot"
+ARG BOT_HOME="/opt/weatherbot/"
 ARG WEBHOOK_LISTEN="0.0.0.0"
 ARG OWN_KEY
 ARG TELEBOT_KEY
