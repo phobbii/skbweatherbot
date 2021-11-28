@@ -1,20 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import telebot
-import pyowm
-import re
-import random
-import datetime
-import timezonefinder
-import pytz
-import time
-import os
-import sys
-import logging
-import ssl
+import telebot, pyowm, re, random, datetime, pytz, time, os, sys, logging, ssl, urllib.request
+from tzwhere import tzwhere
 from aiohttp import web
-import urllib.request
 
 if 'OWN_KEY' in os.environ and os.environ['OWN_KEY'] is not None:
     OWN_KEY = os.environ['OWN_KEY']
@@ -292,8 +281,8 @@ def send_forecast_weather(message):
                 bot.register_next_step_handler(message, send_forecast_weather)
             else:
                 location = forecast.get_forecast().get_location()
-                tf = timezonefinder.TimezoneFinder()
-                timezone_str = tf.certain_timezone_at(lat=location.get_lat(), lng=location.get_lon())
+                tf = tzwhere.tzwhere()
+                timezone_str = tf.tzNameAt(location.get_lat(), location.get_lon())
                 if timezone_str is not None:
                     timezone = pytz.timezone(timezone_str)
                     dt = datetime.datetime.utcnow()
@@ -487,8 +476,8 @@ def send_weather(message):
                 send_sticker(message.chat.id, 'CAADAgADegIAAvnkbAABGyiSVUu1QfIWBA')
             else:
                 location = observation.get_location()
-                tf = timezonefinder.TimezoneFinder()
-                timezone_str = tf.certain_timezone_at(lat=location.get_lat(), lng=location.get_lon())
+                tf = tzwhere.tzwhere()
+                timezone_str = tf.tzNameAt(location.get_lat(), location.get_lon())
                 icon = icon_handler(observation.get_weather().get_weather_icon_name())
                 detailed_status = observation.get_weather().get_detailed_status()
                 temp = int(observation.get_weather().get_temperature('celsius')["temp"])

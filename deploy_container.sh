@@ -77,26 +77,31 @@ if [[ $(uname -s) -eq "Linux" ]]; then
         exit
     else
         if [[ $(compgen -c | grep -x "docker") ]]; then
-            if [[ -f $(find . -maxdepth 1 -name "Dockerfile") ]] && [[ -f $(find . -maxdepth 1 -name "*.py") ]]; then
-                sed -i -e "5,8 d" -e "4 a\ENV OWN_KEY $OWM_KEY\nENV TELEBOT_KEY $TELEBOT_KEY\nENV WEBHOOK_HOST $(curl -s ifconfig.co)\nENV WEBHOOK_PORT $HTTPS_PORT" Dockerfile
-                echo "${GREEN}Dockerfile successfully updated.${RESET}"
-                echo "${GREEN}Building docker image.${RESET}"
-                docker build -t skbweatherbot . > /dev/null 2>&1
-                if [[ -n $(docker images | grep "skbweatherbot" | awk '{print $3}') ]]; then
-                    echo "${GREEN}Bot image built successfully${RESET}"
-                    docker run -d --restart=always --name skbweatherbot -p $HTTPS_PORT:$HTTPS_PORT $(docker images | grep "skbweatherbot" | awk '{print $3}') > /dev/null 2>&1
-                    if [[ $(docker ps -a | grep skbweatherbot | awk '{print $8}') == "Up" ]]; then
-                        echo "${GREEN}Bot container deployed successfully${RESET}"
+            SERVER_VERSION=$(docker version -f "{{.Server.Version}}" | cut -d'.' -f 1 )
+            if [[ "${SERVER_VERSION}" -ge 17 ]]; then
+                if [[ -f $(find . -maxdepth 1 -name "Dockerfile") ]] && [[ -f $(find . -maxdepth 1 -name "*.py") ]]; then
+                    docker_tag=$(tr -dc a-z0-9 </dev/urandom | head -c 4; echo '')
+                    docker build --build-arg OWN_KEY="${OWM_KEY}" --build-arg TELEBOT_KEY="${TELEBOT_KEY}" --build-arg WEBHOOK_HOST="$(curl -s ifconfig.co)" --build-arg WEBHOOK_PORT="${HTTPS_PORT}" -t skbweatherbot:${docker_tag} . > /dev/null 2>&1
+                    if [[ -n $(docker images skbweatherbot:${docker_tag} -q) ]]; then
+                        echo "${GREEN}Bot image skbweatherbot:${docker_tag} built successfully${RESET}"
+                        docker run -d --restart=always --name skbweatherbot -p $HTTPS_PORT:$HTTPS_PORT $(docker images skbweatherbot:${docker_tag} -q) > /dev/null 2>&1
+                        sleep 5
+                        if [[ $(docker ps -a | grep skbweatherbot | awk '{print $8}') == "Up" ]]; then
+                            echo "${GREEN}Bot container deployed successfully${RESET}"
+                        else
+                            echo "${RED}Bot container deployed unsuccessfully.${RESET}"
+                            exit
+                        fi
                     else
-                        echo "${RED}Bot container deployed unsuccessfully.${RESET}"
+                        echo "${RED}Bot image built unsuccessfully.${RESET}"
                         exit
                     fi
                 else
-                    echo "${RED}Bot image built unsuccessfully.${RESET}"
+                    echo "${RED}Either Dockerfile or skbweatherbot is not exist in current directory.${RESET}"
                     exit
                 fi
             else
-                echo "${RED}Either Dockerfile or skbweatherbot is not exist in current directory.${RESET}"
+                echo "${RED}Docker version is $(docker version -f "{{.Server.Version}}"), less than 17.05.0 can't continue.${RESET}"
                 exit
             fi
         else
