@@ -46,6 +46,7 @@ LABEL org.opencontainers.image.authors="Yevhen Skyba <skiba.eugene@gmail.com>"
 
 # Include global args in this stage of the build
 ARG BOT_HOME="/opt/weatherbot/"
+ARG BOT_USR="botusr"
 ARG WEBHOOK_LISTEN="0.0.0.0"
 ARG OWN_KEY
 ARG TELEBOT_KEY
