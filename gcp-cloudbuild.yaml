@@ -6,17 +6,18 @@ steps:
   args:
   - '-c'
   - |- 
-    gcloud artifacts docker images delete $_SERVICE_REPO/$_SERVICE_NAME --quiet
+    test=$(gcloud artifacts docker images list $_SERVICE_REPO | grep IMAGE | cut -d' ' -f2)
+    echo $test
 
-# Docker build image
-- name: 'gcr.io/cloud-builders/docker'
-  id: BUILD
-  args: ['build', '--build-arg', 'OWN_KEY=$_OWM_KEY', '--build-arg', 'TELEBOT_KEY=$_TELEBOT_KEY', '--build-arg', 'WEBHOOK_HOST=$_PUBLIC_STATIC_IP', '--build-arg', 'WEBHOOK_PORT=$_HTTPS_PORT', '-t', '$_SERVICE_IMAGE', '.', '-f', 'Dockerfile']
+# # Docker build image
+# - name: 'gcr.io/cloud-builders/docker'
+#   id: BUILD
+#   args: ['build', '--build-arg', 'OWN_KEY=$_OWM_KEY', '--build-arg', 'TELEBOT_KEY=$_TELEBOT_KEY', '--build-arg', 'WEBHOOK_HOST=$_PUBLIC_STATIC_IP', '--build-arg', 'WEBHOOK_PORT=$_HTTPS_PORT', '-t', '$_SERVICE_IMAGE', '.', '-f', 'Dockerfile']
 
-  # Docker push image
-- name: 'gcr.io/cloud-builders/docker'
-  id: PUSH
-  args: ['push', '$_SERVICE_IMAGE']
+#   # Docker push image
+# - name: 'gcr.io/cloud-builders/docker'
+#   id: PUSH
+#   args: ['push', '$_SERVICE_IMAGE']
  
 substitutions:
     _SERVICE_IMAGE        : ${_SERVICE_REPO}/${_SERVICE_NAME}:${SHORT_SHA}
