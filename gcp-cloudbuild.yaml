@@ -1,4 +1,17 @@
 steps:
+# Remove old docker images
+- name: 'gcr.io/cloud-builders/gcloud'
+  id: CLEAN
+  entrypoint: 'bash'
+  args:
+  - '-eEuo'
+  - 'pipefail'
+  - '-c'
+  - |-
+    if [[ -n $(gcloud artifacts docker images list $_SERVICE_REPO | grep IMAGE | cut -d' ' -f2) ]]; then
+        gcloud artifacts docker images delete $_SERVICE_REPO/$_SERVICE_NAME --quiet
+    fi
+
 # Docker build image
 - name: 'gcr.io/cloud-builders/docker'
   id: BUILD
@@ -10,7 +23,8 @@ steps:
   args: ['push', '$_SERVICE_IMAGE']
  
 substitutions:
-    _SERVICE_IMAGE        : us-east1-docker.pkg.dev/${PROJECT_ID}/${_SERVICE_REPO_NAME}/${_SERVICE_NAME}:${SHORT_SHA}
+    _SERVICE_IMAGE        : ${_SERVICE_REPO}/${_SERVICE_NAME}:${SHORT_SHA}
+    _SERVICE_REPO         : ${_SERVICE_REGION}-docker.pkg.dev/${PROJECT_ID}/${_SERVICE_REPO_NAME}
     _SERVICE_REGION       : us-east1
     _SERVICE_REPO_NAME    : skbweatherbot
     _SERVICE_NAME         : skbweatherbot
