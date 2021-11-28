@@ -7,7 +7,7 @@ steps:
   - '-eEuo'
   - 'pipefail'
   - '-c'
-  - |-
+  - |- 
     if [[ -n $(gcloud artifacts docker images list $_SERVICE_REPO | grep IMAGE | cut -d' ' -f2) ]]; then
         gcloud artifacts docker images delete $_SERVICE_REPO/$_SERVICE_NAME --quiet
     else
