@@ -82,9 +82,9 @@ if [[ $(uname -s) -eq "Linux" ]]; then
                 if [[ -f $(find . -maxdepth 1 -name "Dockerfile") ]] && [[ -f $(find . -maxdepth 1 -name "*.py") ]]; then
                     docker_tag=$(tr -dc a-z0-9 </dev/urandom | head -c 4; echo '')
                     docker build --build-arg OWN_KEY="${OWM_KEY}" --build-arg TELEBOT_KEY="${TELEBOT_KEY}" --build-arg WEBHOOK_HOST="$(curl -s ifconfig.co)" --build-arg WEBHOOK_PORT="${HTTPS_PORT}" -t skbweatherbot:${docker_tag} . > /dev/null 2>&1
-                    if [[ -n $(docker images | grep "skbweatherbot:${docker_tag}" | awk '{print $3}') ]]; then
+                    if [[ -n $(docker images skbweatherbot:${docker_tag} -q) ]]; then
                         echo "${GREEN}Bot image skbweatherbot:${docker_tag} built successfully${RESET}"
-                        docker run -d --restart=always --name skbweatherbot -p $HTTPS_PORT:$HTTPS_PORT $(docker images | grep "skbweatherbot:${docker_tag}" | awk '{print $3}') > /dev/null 2>&1
+                        docker run -d --restart=always --name skbweatherbot -p $HTTPS_PORT:$HTTPS_PORT $(docker images skbweatherbot:${docker_tag} -q) > /dev/null 2>&1
                         if [[ $(docker ps -a | grep skbweatherbot | awk '{print $8}') == "Up" ]]; then
                             echo "${GREEN}Bot container deployed successfully${RESET}"
                         else
@@ -100,7 +100,7 @@ if [[ $(uname -s) -eq "Linux" ]]; then
                     exit
                 fi
             else
-                echo "${RED}Docker version less than 17.05.0 can't continue.${RESET}"
+                echo "${RED}Docker version is $(docker version -f "{{.Server.Version}}"), less than 17.05.0 can't continue.${RESET}"
                 exit
             fi
         else
