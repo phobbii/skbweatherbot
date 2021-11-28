@@ -104,6 +104,7 @@ if [[ $(uname -s) -eq "Linux" ]]; then
             else
                 echo "${RED}Docker version less than 17.05.0 can't continue.${RESET}"
                 exit
+            fi
         else
             echo "${RED}Docker not installed. Please install docker and re-run script.${RESET}"
             exit
