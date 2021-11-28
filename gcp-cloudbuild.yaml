@@ -28,7 +28,7 @@ steps:
   args:
   - '-c'
   - |-
-    gcloud compute instances list --filter="name=('NAME' $_INSTANCE_NAME)" | awk '{print$5}' | sed 1d
+    gcloud compute instances list --filter="name=('NAME' $_INSTANCE_NAME)" | awk '{print$6}' | sed 1d
 
 substitutions:
     _SERVICE_IMAGE     : ${_SERVICE_REPO}/${_SERVICE_REPO_NAME}:${SHORT_SHA}
