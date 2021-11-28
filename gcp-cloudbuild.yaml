@@ -4,8 +4,13 @@ steps:
   id: BUILD
   args: ['build', '--build-arg OWN_KEY=$_OWM_KEY', '--build-arg TELEBOT_KEY=$_TELEBOT_KEY', '--build-arg WEBHOOK_HOST=$_PUBLIC_STATIC_IP', '--build-arg WEBHOOK_PORT=$_HTTPS_PORT', '-t', '$_SERVICE_IMAGE', '.', '-f', 'Dockerfile']
 
+  # Docker push image
+- name: 'gcr.io/cloud-builders/docker'
+  id: PUSH
+  args: ['push', '$_SERVICE_IMAGE']
+ 
 substitutions:
-    _SERVICE_IMAGE        : us-east1-docker.pkg.dev/${PROJECT_ID}/${_SERVICE_REPO_NAME}/${_SERVICE_NAME}:${SHORT_SHA}
+    _SERVICE_IMAGE        : us-east1-docker.pkg.dev/striking-retina-232710/${_SERVICE_REPO_NAME}/${_SERVICE_NAME}:${SHORT_SHA}
     _SERVICE_REGION       : us-east1
     _SERVICE_REPO_NAME    : skbweatherbot
     _SERVICE_NAME         : skbweatherbot
