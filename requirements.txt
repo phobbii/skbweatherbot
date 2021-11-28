@@ -2,5 +2,5 @@ pytelegrambotapi==4.2.0
 pyowm==2.10.0
 datetime==4.3
 pytz==2021.3
-tzwhere
+tzwhere==3.0.3
 aiohttp==3.8.1
