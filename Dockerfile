@@ -60,7 +60,7 @@ COPY --from=base ${BOT_HOME} ${BOT_HOME}
 COPY requirements.txt skbweatherbot.py ${BOT_HOME}
 
 # Install bot dependencies
-RUN RUN apk add --no-cache geos \
+RUN apk add --no-cache geos \
     && pip install -r requirements.txt \
     && rm -rf requirements.txt
 
