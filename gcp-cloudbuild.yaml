@@ -1,4 +1,20 @@
 steps:
+# Create Static IP
+- name: 'gcr.io/cloud-builders/gcloud'
+  id: CREATE IP
+  entrypoint: 'bash'
+  args:
+  - '-c'
+  - |- 
+    if [[ -n $(gcloud compute addresses list --filter="name=('NAME' $_INSTANCE_NAME)" --format="value(NAME)") ]]; then
+        gcloud compute addresses delete $_INSTANCE_NAME --project=${PROJECT_ID} --region=$_SERVICE_REGION --quiet
+        gcloud compute addresses create $_INSTANCE_NAME --project=${PROJECT_ID} --region=$_SERVICE_REGION
+        gcloud compute addresses describe $_INSTANCE_NAME --project=${PROJECT_ID} --region=$_SERVICE_REGION --format="value(address)" > /workspace/public_ip.txt
+    else
+        gcloud compute addresses create $_INSTANCE_NAME --project=${PROJECT_ID} --region=$_SERVICE_REGION
+        gcloud compute addresses describe $_INSTANCE_NAME --project=${PROJECT_ID} --region=$_SERVICE_REGION --format="value(address)" > /workspace/public_ip.txt
+    fi
+
 # Remove old docker images
 - name: 'gcr.io/cloud-builders/gcloud'
   id: CLEAN REPO
@@ -6,7 +22,7 @@ steps:
   args:
   - '-c'
   - |- 
-    if [[ -n $(gcloud artifacts docker images list $_SERVICE_REPO | awk '{print$1}' | sed 1d) ]]; then
+    if [[ -n $(gcloud artifacts docker images list $_SERVICE_REPO --format="value(IMAGE)") ]]; then
         gcloud artifacts docker images delete $_SERVICE_REPO/$_SERVICE_REPO_NAME --quiet
     else
         echo "$_SERVICE_REPO repo is empty. Clean skipped"
@@ -20,7 +36,7 @@ steps:
   args:
   - '-c'
   - |-
-    docker build --build-arg TELEBOT_KEY=$$TELEBOT_KEY --build-arg WEBHOOK_HOST=$_PUBLIC_STATIC_IP --build-arg WEBHOOK_PORT=$_HTTPS_PORT -t $_SERVICE_IMAGE . -f Dockerfile
+    docker build --build-arg TELEBOT_KEY=$$TELEBOT_KEY --build-arg WEBHOOK_HOST=$(cat /workspace/public_ip.txt) --build-arg WEBHOOK_PORT=$_HTTPS_PORT -t $_SERVICE_IMAGE . -f Dockerfile
   
 # Docker push image
 - name: 'gcr.io/cloud-builders/docker'
@@ -35,26 +51,26 @@ steps:
   args:
   - '-c'
   - |-
-    if [[ -z $(gcloud compute instances list --filter="name=('NAME' $_INSTANCE_NAME)") ]]; then
+    if [[ -z $(gcloud compute instances list --filter="name=('NAME' $_INSTANCE_NAME)" --format="value(NAME)") ]]; then
         gcloud compute instances create-with-container $_INSTANCE_NAME --machine-type=$_INSTANCE_TYPE \
             --image=$_INSTANCE_IMAGE --zone=$_SERVICE_REGION-$_SERVICE_ZONE --labels=$_INSTANCE_LABELS --tags=$_INSTANCE_NETWORK_TAGS\
-            --maintenance-policy=$_INSTANCE_MAINTANANCE_POLICY --address=$_PUBLIC_STATIC_IP --network-tier=$_NETWORK_TIER \
+            --maintenance-policy=$_INSTANCE_MAINTANANCE_POLICY --address=$(cat /workspace/public_ip.txt) --network-tier=$_NETWORK_TIER \
             --restart-on-failure --container-image=$_SERVICE_IMAGE --container-restart-policy="always" --boot-disk-size=$_INSTANCE_DISK_SIZE \
             --container-env=OWN_KEY=$$OWM_KEY
     else
-        if [[ $(gcloud compute instances list --filter="name=('NAME' $_INSTANCE_NAME)" | awk '{print$6}' | sed 1d) == "TERMINATED" ]]; then
+        if [[ $(gcloud compute instances list --filter="name=('NAME' $_INSTANCE_NAME)" --format="value(STATUS)") == "TERMINATED" ]]; then
             gcloud compute instances delete $_INSTANCE_NAME --zone $_SERVICE_REGION-$_SERVICE_ZONE --quiet
             gcloud compute instances create-with-container $_INSTANCE_NAME --machine-type=$_INSTANCE_TYPE \
                 --image=$_INSTANCE_IMAGE --zone=$_SERVICE_REGION-$_SERVICE_ZONE --labels=$_INSTANCE_LABELS --tags=$_INSTANCE_NETWORK_TAGS\
-                --maintenance-policy=$_INSTANCE_MAINTANANCE_POLICY --address=$_PUBLIC_STATIC_IP --network-tier=$_NETWORK_TIER \
+                --maintenance-policy=$_INSTANCE_MAINTANANCE_POLICY --address=$(cat /workspace/public_ip.txt) --network-tier=$_NETWORK_TIER \
                 --restart-on-failure --container-image=$_SERVICE_IMAGE --container-restart-policy="always" --boot-disk-size=$_INSTANCE_DISK_SIZE \
                 --container-env=OWN_KEY=$$OWM_KEY
             gcloud compute instances stop $_INSTANCE_NAME --zone $_SERVICE_REGION-$_SERVICE_ZONE
-        elif [[ $(gcloud compute instances list --filter="name=('NAME' $_INSTANCE_NAME)" | awk '{print$6}' | sed 1d) == "RUNNING" ]]; then
+        elif [[ $(gcloud compute instances list --filter="name=('NAME' $_INSTANCE_NAME)" --format="value(STATUS)") == "RUNNING" ]]; then
             gcloud compute instances delete $_INSTANCE_NAME --zone $_SERVICE_REGION-$_SERVICE_ZONE --quiet
             gcloud compute instances create-with-container $_INSTANCE_NAME --machine-type=$_INSTANCE_TYPE \
                 --image=$_INSTANCE_IMAGE --zone=$_SERVICE_REGION-$_SERVICE_ZONE --labels=$_INSTANCE_LABELS --tags=$_INSTANCE_NETWORK_TAGS \
-                --maintenance-policy=$_INSTANCE_MAINTANANCE_POLICY --address=$_PUBLIC_STATIC_IP --network-tier=$_NETWORK_TIER \
+                --maintenance-policy=$_INSTANCE_MAINTANANCE_POLICY --address=$(cat /workspace/public_ip.txt) --network-tier=$_NETWORK_TIER \
                 --restart-on-failure --container-image=$_SERVICE_IMAGE --container-restart-policy="always" --boot-disk-size=$_INSTANCE_DISK_SIZE \
                 --container-env=OWN_KEY=$$OWM_KEY
         fi
@@ -83,3 +99,4 @@ substitutions:
     _NETWORK_TIER                : PREMIUM
     _SM_OWM_KEY_SECRET_NAME      : WEATHERBOT_OWN_KEY
     _SM_TELEBOT_KEY_SECRET_NAME  : WEATHERBOT_TELEGRAM_KEY
+    _HTTPS_PORT                  : "8443"
