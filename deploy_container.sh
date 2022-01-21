@@ -8,7 +8,7 @@ PURPLE=$(tput setaf 6)
 RESET=$(tput sgr0)
 
 # Help/usage
-function print_help {
+function print_help() {
     echo ${PURPLE}
     cat <<EOH
 Usage: $(basename "$0") --owm KEY --telegram KEY --port PORT
@@ -25,7 +25,7 @@ EOH
 }
 
 # Print error and exit with fault code 2
-function stderr {
+function stderr() {
     printf 'Error:\t%s\n\n' "$1" >&2
     print_help
     exit 2
