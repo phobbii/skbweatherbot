@@ -24,11 +24,10 @@ EOH
     echo ${RESET}
 }
 
-# Print error and exit with fault code 2
+# Print error and exit with fault code
 function stderr() {
     printf 'Error:\t%s\n\n' "$1" >&2
     print_help
-    exit 2
 }
 
 # Extract the value from an argument, and exit with error if no value is present
