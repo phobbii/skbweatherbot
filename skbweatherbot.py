@@ -348,7 +348,7 @@ def send_help(message):
 
 @bot.message_handler(commands=['author'])
 def send_author(message):
-    answer = "\U0001F537 author: <b>Yevhen Skyba</b>\n"
+    answer = "\U0001F537 Author: <b>Yevhen Skyba</b>\n"
     answer += "\U0001F537 Email: skiba.eugene@gmail.com\n"
     answer += "\U0001F537 LinkedIn: https://www.linkedin.com/in/yevhen-skyba/\n"
     answer += "\U0001F537 Telegram: @phobbii"
@@ -381,7 +381,7 @@ def callback_inline(message):
             send_msg(message.message.chat.id, answer, reply_markup=keyboard, parse_mode='HTML')
             send_sticker(message.message.chat.id, 'CAADAgADxwIAAvnkbAABx601cOaIcf8WBA')
         elif message.data == "author":
-            answer = "\U0001F537 author: <b>Yevhen Skyba</b>\n"
+            answer = "\U0001F537 Author: <b>Yevhen Skyba</b>\n"
             answer += "\U0001F537 Email: skiba.eugene@gmail.com\n"
             answer += "\U0001F537 LinkedIn: https://www.linkedin.com/in/yevhen-skyba/\n"
             answer += "\U0001F537 Telegram: @phobbii"
@@ -419,7 +419,7 @@ def callback_inline(message):
             send_msg(message.message.chat.id, answer, reply_markup=keyboard, parse_mode='HTML')
             send_sticker(message.message.chat.id, 'CAADAgADxwIAAvnkbAABx601cOaIcf8WBA')
         elif message.data == "forecast_author":
-            answer = "\U0001F537 author: <b>Yevhen Skyba</b>\n"
+            answer = "\U0001F537 Author: <b>Yevhen Skyba</b>\n"
             answer += "\U0001F537 Email: skiba.eugene@gmail.com\n"
             answer += "\U0001F537 LinkedIn: https://www.linkedin.com/in/yevhen-skyba/\n"
             answer += "\U0001F537 Telegram: @phobbii"
