@@ -187,8 +187,8 @@ def send_welcome(message):
     location = telebot.types.InlineKeyboardButton(text="location", callback_data="location")
     forecast = telebot.types.InlineKeyboardButton(text="forecast", callback_data="forecast")
     help = telebot.types.InlineKeyboardButton(text="help", callback_data="help")
-    autor = telebot.types.InlineKeyboardButton(text="autor", callback_data="autor")
-    keyboard.add(location,forecast, help, autor)
+    author = telebot.types.InlineKeyboardButton(text="author", callback_data="author")
+    keyboard.add(location,forecast, help, author)
     if message.from_user.first_name is not None:
         username = message.from_user.first_name
     else:
@@ -198,7 +198,7 @@ def send_welcome(message):
     answer += "отправьте текущее местоположение - /location.\n"
     answer += "\U0001F537 Прогноз на 3 дня - /forecast.\n"
     answer += "\U0001F537 Помощь - /help.\n"
-    answer += "\U0001F537 Информации об авторе - /autor.\n"
+    answer += "\U0001F537 Информации об авторе - /author.\n"
     send_action(message.chat.id, 'typing')
     time.sleep(1)
     send_msg(message.chat.id, answer, reply_markup=keyboard)
@@ -329,8 +329,8 @@ def send_help(message):
     keyboard = telebot.types.InlineKeyboardMarkup(row_width=2)
     location = telebot.types.InlineKeyboardButton(text="location", callback_data="location")
     forecast = telebot.types.InlineKeyboardButton(text="forecast", callback_data="forecast")
-    autor = telebot.types.InlineKeyboardButton(text="autor", callback_data="autor")
-    keyboard.add(location, forecast, autor)
+    author = telebot.types.InlineKeyboardButton(text="author", callback_data="author")
+    keyboard.add(location, forecast, author)
     if message.from_user.first_name is not None:
         username = message.from_user.first_name
     else:
@@ -339,16 +339,16 @@ def send_help(message):
     answer += "\U0001F537 Пример: <b>Kharkiv</b>.\n"
     answer += "\U0001F537 Прогноз погоды по местоположению - /location.\n"
     answer += "\U0001F537 Прогноз на 3 дня - /forecast.\n"
-    answer += "\U0001F537 Информации об авторе - /autor.\n"
+    answer += "\U0001F537 Информации об авторе - /author.\n"
     send_action(message.chat.id, 'typing')
     time.sleep(1)
     send_msg(message.chat.id, answer, reply_markup=keyboard, parse_mode='HTML')
     send_sticker(message.chat.id, 'CAADAgADxwIAAvnkbAABx601cOaIcf8WBA')
 
 
-@bot.message_handler(commands=['autor'])
-def send_autor(message):
-    answer = "\U0001F537 Autor: <b>Yevhen Skyba</b>\n"
+@bot.message_handler(commands=['author'])
+def send_author(message):
+    answer = "\U0001F537 author: <b>Yevhen Skyba</b>\n"
     answer += "\U0001F537 Email: skiba.eugene@gmail.com\n"
     answer += "\U0001F537 LinkedIn: https://www.linkedin.com/in/yevhen-skyba/\n"
     answer += "\U0001F537 Telegram: @phobbii"
@@ -369,19 +369,19 @@ def callback_inline(message):
         if message.data == "help":
             location = telebot.types.InlineKeyboardButton(text="location", callback_data="location")
             forecast = telebot.types.InlineKeyboardButton(text="forecast", callback_data="forecast")
-            autor = telebot.types.InlineKeyboardButton(text="autor", callback_data="autor")
-            keyboard.add(location, forecast, autor)
+            author = telebot.types.InlineKeyboardButton(text="author", callback_data="author")
+            keyboard.add(location, forecast, author)
             answer = "{}, введите название города латиницей.\n".format(username.title())
             answer += "\U0001F537 Пример: <b>Kharkiv</b>.\n"
             answer += "\U0001F537 Прогноз погоды по местоположению - /location.\n"
             answer += "\U0001F537 Прогноз на 3 дня - /forecast.\n"
-            answer += "\U0001F537 Информации об авторе - /autor.\n"
+            answer += "\U0001F537 Информации об авторе - /author.\n"
             send_action(message.message.chat.id, 'typing')
             time.sleep(1)
             send_msg(message.message.chat.id, answer, reply_markup=keyboard, parse_mode='HTML')
             send_sticker(message.message.chat.id, 'CAADAgADxwIAAvnkbAABx601cOaIcf8WBA')
-        elif message.data == "autor":
-            answer = "\U0001F537 Autor: <b>Yevhen Skyba</b>\n"
+        elif message.data == "author":
+            answer = "\U0001F537 author: <b>Yevhen Skyba</b>\n"
             answer += "\U0001F537 Email: skiba.eugene@gmail.com\n"
             answer += "\U0001F537 LinkedIn: https://www.linkedin.com/in/yevhen-skyba/\n"
             answer += "\U0001F537 Telegram: @phobbii"
@@ -408,18 +408,18 @@ def callback_inline(message):
             send_msg(message.message.chat.id, answer, reply_markup=reply_keyboard)
             bot.register_next_step_handler(message.message, send_forecast_weather)
         elif message.data == "forecast_help":
-            autor = telebot.types.InlineKeyboardButton(text="autor", callback_data="forecast_autor")
-            keyboard.add(autor)
+            author = telebot.types.InlineKeyboardButton(text="author", callback_data="forecast_author")
+            keyboard.add(author)
             answer = "{}, введите название города латиницей.\n".format(username.title())
             answer += "\U0001F537 Пример: <b>Kharkiv</b>.\n"
             answer += "\U0001F537 Прогноз погоды по местоположению - '\U0001F310 location'.\n"
-            answer += "\U0001F537 Информации об авторе - autor.\n"
+            answer += "\U0001F537 Информации об авторе - author.\n"
             send_action(message.message.chat.id, 'typing')
             time.sleep(1)
             send_msg(message.message.chat.id, answer, reply_markup=keyboard, parse_mode='HTML')
             send_sticker(message.message.chat.id, 'CAADAgADxwIAAvnkbAABx601cOaIcf8WBA')
-        elif message.data == "forecast_autor":
-            answer = "\U0001F537 Autor: <b>Yevhen Skyba</b>\n"
+        elif message.data == "forecast_author":
+            answer = "\U0001F537 author: <b>Yevhen Skyba</b>\n"
             answer += "\U0001F537 Email: skiba.eugene@gmail.com\n"
             answer += "\U0001F537 LinkedIn: https://www.linkedin.com/in/yevhen-skyba/\n"
             answer += "\U0001F537 Telegram: @phobbii"
