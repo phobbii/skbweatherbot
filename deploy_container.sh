@@ -25,14 +25,17 @@ EOH
 }
 
 # Print error and exit with fault code
-function stderr() {
-    printf 'Error:\t%s\n\n' "$1" >&2
+function stderr(){
+    local error_message=$1
+    printf "${RED}Error:\t%s\n\n${RESET}" "$error_message" >&2
     print_help
 }
 
 # Extract the value from an argument, and exit with error if no value is present
-function argval() {
-    [[ -z $2 || $2 =~ ^-- ]] && stderr "Missing value for argument $1!"
+function argval(){
+    local arg_key=$1
+    local arg_value=$2
+    [[ -z $arg_value || $arg_value =~ ^-- ]] && stderr "Missing value for argument $arg_key!"
 }
 
 # Check required arguments provided, parse all arguments passed to the script
