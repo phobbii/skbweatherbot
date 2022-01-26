@@ -8,7 +8,7 @@ PURPLE=$(tput setaf 6)
 RESET=$(tput sgr0)
 
 # Help/usage
-function print_help() {
+function print_help(){
     echo ${PURPLE}
     cat <<EOH
 Usage: $(basename "$0") --owm KEY --telegram KEY --port PORT
@@ -32,47 +32,50 @@ function stderr(){
 }
 
 # Extract the value from an argument, and exit with error if no value is present
-function argval(){
+function validate_arg(){
     local arg_key=$1
     local arg_value=$2
     [[ -z $arg_value || $arg_value =~ ^-- ]] && stderr "Missing value for argument $arg_key!"
 }
 
 # Check required arguments provided, parse all arguments passed to the script
-if (($#)); then
-    req_args=('--owm' '--telegram' '--port')
-    for arg in "${req_args[@]}"; do
-        for parg in ${@}; do
-            if [[ $parg == '-h' || $parg == '--help' ]]; then
-                print_help
-            else
-                [[ ! ${@} =~ $arg ]] && stderr "Missing required argument $arg!"
-            fi
+function check_provided_args(){
+    if (($#)); then
+        req_args=('--owm' '--telegram' '--port')
+        for arg in "${req_args[@]}"; do
+            for parg in ${@}; do
+                if [[ $parg == '-h' || $parg == '--help' ]]; then
+                    print_help
+                else
+                    [[ ! ${@} =~ $arg ]] && stderr "Missing required argument $arg!"
+                fi
+            done
         done
-    done
-    while [[ ${#} -gt 0 ]]; do
-        ARG=$1
-        shift
-        case $ARG in
-            -h|--help)
-                print_help
-                ;;
-            --owm)
-                argval "$ARG" "$1"; OWM_KEY=$1; shift
-                ;;
-            --telegram)
-                argval "$ARG" "$1"; TELEBOT_KEY=$1; shift
-                ;;
-            --port)
-                argval "$ARG" "$1"; HTTPS_PORT=$1; shift
-                ;;
-        esac
-    done
-else
-    stderr 'No arguments supplied!'
-fi
+        while [[ ${#} -gt 0 ]]; do
+            ARG=$1
+            shift
+            case $ARG in
+                -h|--help)
+                    print_help
+                    ;;
+                --owm)
+                    validate_arg "$ARG" "$1"; OWM_KEY=$1; shift
+                    ;;
+                --telegram)
+                    validate_arg "$ARG" "$1"; TELEBOT_KEY=$1; shift
+                    ;;
+                --port)
+                    validate_arg "$ARG" "$1"; HTTPS_PORT=$1; shift
+                    ;;
+            esac
+        done
+    else
+        stderr 'No arguments supplied!'
+    fi
+}
 
 # Main block
+check_provided_args "${@}"
 if [[ $(uname -s) -eq 'Linux' ]]; then
     if [[ $EUID -ne 0 ]]; then
         echo "${RED}Please run as root.${RESET}"
