@@ -214,7 +214,7 @@ def geo(message):
         username = message.from_user.first_name
     else:
         username = message.from_user.username
-    answer = "{}, нажмите на кнопку '\U0001F310 location' для отправки местоположение\n".format(username.title())
+    answer = "{}, нажмите на кнопку '\U0001F310 location' для отправки местоположения\n".format(username.title())
     send_action(message.chat.id, 'typing')
     time.sleep(1)
     send_msg(message.chat.id, answer, reply_markup=reply_keyboard)
@@ -230,7 +230,7 @@ def forecast(message):
     else:
         username = message.from_user.username
     answer = "{}, введите город для получения прогноза на 3 дня или\n".format(username.title())
-    answer += "нажмите '\U0001F310 location' для отправки местоположение\n"
+    answer += "нажмите '\U0001F310 location' для отправки местоположения\n"
     send_action(message.chat.id, 'typing')
     time.sleep(1)
     send_msg(message.chat.id, answer, reply_markup=reply_keyboard)
@@ -393,7 +393,7 @@ def callback_inline(message):
             reply_keyboard = telebot.types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
             location = telebot.types.KeyboardButton(text="\U0001F310 location", request_location=True)
             reply_keyboard.add(location)
-            answer = "{}, нажмите на кнопку '\U0001F310 location' для отправки местоположение\n".format(username.title())
+            answer = "{}, нажмите на кнопку '\U0001F310 location' для отправки местоположения\n".format(username.title())
             send_action(message.message.chat.id, 'typing')
             time.sleep(1)
             send_msg(message.message.chat.id, answer, reply_markup=reply_keyboard)
@@ -402,7 +402,7 @@ def callback_inline(message):
             location = telebot.types.KeyboardButton(text="\U0001F310 location", request_location=True)
             reply_keyboard.add(location)
             answer = "{}, введите город для получения прогноза на 3 дня или\n".format(username.title())
-            answer += "нажмите '\U0001F310 location' для отправки местоположение\n"
+            answer += "нажмите '\U0001F310 location' для отправки местоположения\n"
             send_action(message.message.chat.id, 'typing')
             time.sleep(1)
             send_msg(message.message.chat.id, answer, reply_markup=reply_keyboard)
