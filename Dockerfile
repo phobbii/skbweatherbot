@@ -73,7 +73,7 @@ COPY requirements.txt skbweatherbot.py ${BOT_HOME}
 # Install bot dependencies
 RUN apk add --no-cache geos \
     && chown -R ${BOT_USR}. ${BOT_HOME} \
-    && pip install -r requirements.txt \
+    && pip install --no-use-pep517 -r requirements.txt \
     && rm -rf requirements.txt
 
 # Set service user
