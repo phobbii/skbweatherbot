@@ -90,27 +90,33 @@ degree_sign = u'\N{DEGREE SIGN}'
 
 
 def icon_handler(icon):
-    if "01d" in icon:
-        emoji = "\U00002600"
-    elif "01n" in icon:
-        emoji = "\U0001F311"
-    elif "02" in icon:
-        emoji = "\U000026C5"
-    elif "03" in icon:
-        emoji = "\U00002601"
-    elif "04" in icon:
-        emoji = "\U00002601"
-    elif "09" in icon:
-        emoji = "\U00002614"
-    elif "10" in icon:
-        emoji = "\U00002614"
-    elif "11" in icon:
-        emoji = "\U000026A1"
-    elif "13" in icon:
-        emoji = "\U00002744"
-    elif "50" in icon:
-        emoji = "\U0001F32B"
-    return emoji
+    icons = {'01d': '\U00002600', '01n': '\U0001F311', '02': '\U000026C5', '03': '\U00002601', '04': '\U00002601',
+             '09': '\U00002614', '10': '\U00002614', '11': '\U000026A1', '13': '\U00002744', '50': '\U0001F32B'}
+    return icons[icon]
+
+
+# def icon_handler(icon):
+#     if "01d" in icon:
+#         emoji = "\U00002600"
+#     elif "01n" in icon:
+#         emoji = "\U0001F311"
+#     elif "02" in icon:
+#         emoji = "\U000026C5"
+#     elif "03" in icon:
+#         emoji = "\U00002601"
+#     elif "04" in icon:
+#         emoji = "\U00002601"
+#     elif "09" in icon:
+#         emoji = "\U00002614"
+#     elif "10" in icon:
+#         emoji = "\U00002614"
+#     elif "11" in icon:
+#         emoji = "\U000026A1"
+#     elif "13" in icon:
+#         emoji = "\U00002744"
+#     elif "50" in icon:
+#         emoji = "\U0001F32B"
+#     return emoji
 
 
 def send_action(message, action):
