@@ -57,6 +57,7 @@ steps:
             --maintenance-policy=$_INSTANCE_MAINTANANCE_POLICY --address=$(cat /workspace/public_ip.txt) --network-tier=$_NETWORK_TIER \
             --restart-on-failure --container-image=$_SERVICE_IMAGE --container-restart-policy="always" --boot-disk-size=$_INSTANCE_DISK_SIZE \
             --container-env=OWN_KEY=$$OWM_KEY
+        gcloud compute instances remove-metadata $_INSTANCE_NAME --zone=$_SERVICE_REGION-$_SERVICE_ZONE --keys=google-logging-enabled
     else
         if [[ $(gcloud compute instances list --filter="name=('NAME' $_INSTANCE_NAME)" --format="value(STATUS)") == "TERMINATED" ]]; then
             gcloud compute instances delete $_INSTANCE_NAME --zone $_SERVICE_REGION-$_SERVICE_ZONE --quiet
@@ -66,6 +67,7 @@ steps:
                 --restart-on-failure --container-image=$_SERVICE_IMAGE --container-restart-policy="always" --boot-disk-size=$_INSTANCE_DISK_SIZE \
                 --container-env=OWN_KEY=$$OWM_KEY
             gcloud compute instances stop $_INSTANCE_NAME --zone $_SERVICE_REGION-$_SERVICE_ZONE
+            gcloud compute instances remove-metadata $_INSTANCE_NAME --zone=$_SERVICE_REGION-$_SERVICE_ZONE --keys=google-logging-enabled
         elif [[ $(gcloud compute instances list --filter="name=('NAME' $_INSTANCE_NAME)" --format="value(STATUS)") == "RUNNING" ]]; then
             gcloud compute instances delete $_INSTANCE_NAME --zone $_SERVICE_REGION-$_SERVICE_ZONE --quiet
             gcloud compute instances create-with-container $_INSTANCE_NAME --machine-type=$_INSTANCE_TYPE \
