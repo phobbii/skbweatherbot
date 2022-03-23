@@ -5,14 +5,15 @@ class Checks(object):
     def __init__(self) -> None:
         pass
 
-    def get_public_ip(self, service):
-        try:
-            webhook_host = re.sub('^\s+|\n|\r|\s+$', '', 
+    def get_public_ip(self, ip_services):
+        for service in ip_services:
+            try:
+                webhook_host = re.sub('^\s+|\n|\r|\s+$', '',
                                     urllib.request.urlopen(service).read().decode('utf8'))
-            return webhook_host
-        except Exception as error:
-            print(f'Checks get public ip unsuccessful, unexpected error occurred: {error}')
-            return False
+                return webhook_host
+            except Exception as error:
+                print(f'Checks get public ip unsuccessful, unexpected error occurred: {error}')
+                return False
 
     def get_ssl_data(self, dir='.', file_types = ['pem', 'key']):
         ssl = {}
