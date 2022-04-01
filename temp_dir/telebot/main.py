@@ -1,15 +1,18 @@
-import telebot
+import telebot, re, random
+from datetime import datetime, timedelta
 from ..handlers.main import Messages
 from ..generators.main import Answers
+from ..weather.main import Weather
 
 
 class Telebot(object):
 
-    def __init__(self, auth, sleep_timer=5, location_cmd='location', forecast_cmd='forecast', help_cmd='help', 
-                author_cmd='author'):
-        self.messages = Messages(auth, sleep_timer)
+    def __init__(self, telebot_auth, owm_auth, owm_language='ru', sleep_timer=5, location_cmd='location', 
+               forecast_cmd='forecast', help_cmd='help', author_cmd='author'):
+        self.messages = Messages(telebot_auth, sleep_timer)
         self.answers = Answers()
-        self.bot = auth
+        self.weather = Weather(API_key=owm_auth, language=owm_language)
+        self.bot = telebot_auth
         self.location_cmd = location_cmd
         self.forecast_cmd = forecast_cmd
         self.help_cmd = help_cmd
@@ -57,5 +60,25 @@ class Telebot(object):
         self.messages.send_msg(message.chat.id, answer, reply_markup=keyboard)
         self.bot.register_next_step_handler(message, self.send_forecast_weather)
 
-    def send_forecast_weather(message):
-        pass
+    def send_forecast_weather(self, message):
+        username = self.__get_username(message)
+        if self.weather.is_online():
+            keyboard = telebot.types.InlineKeyboardMarkup(row_width=2)
+            help = telebot.types.InlineKeyboardButton(text='help', callback_data='forecast_help')
+            keyboard.add(help)
+            if message.text is not None and bool(re.search('[\u0400-\u04FF]', message.text)):
+                answer = self.answers.forecast_errors(username=username)
+                self.messages.send_action(message.chat.id, 'typing')
+                self.messages.send_msg(message.chat.id, answer, reply_markup=keyboard)
+                self.messages.send_sticker(message.chat.id, 'CAADAgADewIAAvnkbAABeDnKq9BHIbAWBA')
+                self.bot.register_next_step_handler(message, self.send_forecast_weather)
+            elif message.text is not None and message.text == '...':
+                answer = self.answers.forecast_errors(city_name=str(message.text).capitalize())
+                self.messages.send_action(message.chat.id, 'typing')
+                self.messages.send_msg(message.chat.id, answer, reply_markup=keyboard, parse_mode='HTML')
+                self.messages.send_sticker(message.chat.id, 'CAADAgADegIAAvnkbAABGyiSVUu1QfIWBA')
+                self.bot.bot.register_next_step_handler(message, self.send_forecast_weather)
+            else:
+                forecast_data = self.weather.get_data(message, forecast=True)
+                if forecast_data:
+                    pass

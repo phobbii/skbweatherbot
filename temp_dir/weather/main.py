@@ -17,22 +17,19 @@ class Weather(object):
                 '50': '\U0001F32B'}
         return icons[icon]
 
-    def __get_weather_data(self, message, timer=None):
+    def get_data(self, message, forecast=False):
         try:
-            if timer:
+            if forecast:
                 if message.location is not None:
                     data = self.owm.three_hours_forecast_at_coords(message.location.latitude, message.location.longitude)
                 else:
                     data = self.owm.three_hours_forecast(message.text)
-                if data:
-                    return data.get_forecast().get_location(), data.get_weather_at(timer)
             else:
                 if message.location is not None:
                     data = self.owm.weather_at_coords(message.location.latitude, message.location.longitude)
                 else:
                     data = self.owm.weather_at_place(message.text)
-                if data:
-                    return data.get_location(), data.get_weather()
+            return data
         except Exception as error:
             print(f'Weather get weather data unsuccessful, unexpected error occurred: {error}')
             return False
@@ -45,17 +42,20 @@ class Weather(object):
             print(f'Weather is online unsuccessful, unexpected error occurred: {error}')
             return False
 
-    def weather(self, message, timer=None):
-        observation = self.__get_weather_data(self, message, timer)
+    def get_weather(self, data, timer=None):
+        if timer:
+            observation = data.get_weather_at(timer)
+            location = data.get_forecast().get_location()
+        else:
+            observation = data.get_weather()
+            location = data.get_location()
         tf = tzwhere.tzwhere()
-        if observation:
-            location = observation[0]
-            weather = dict(LocationName = location.get_name(),
-                           TimeZone = tf.tzNameAt(location.get_lat(), location.get_lon()),
-                           Icon = self.__icon(observation[1].get_weather_icon_name()),
-                           DetailedStatus = observation[1].get_detailed_status(),
-                           Temp = int(observation[1].get_temperature('celsius')['temp']),
-                           Pressure = int(float(observation[1].get_pressure()['press']) * 0.75),
-                           Humidity = observation[1].get_humidity(),
-                           WindSpeed = int(observation[1].get_wind()['speed']))
-            return weather
+        weather = dict(LocationName = location.get_name(),
+                        TimeZone = tf.tzNameAt(location.get_lat(), location.get_lon()),
+                        Icon = self.__icon(observation.get_weather_icon_name()),
+                        DetailedStatus = observation.get_detailed_status(),
+                        Temp = int(observation.get_temperature('celsius')['temp']),
+                        Pressure = int(float(observation.get_pressure()['press']) * 0.75),
+                        Humidity = observation.get_humidity(),
+                        WindSpeed = int(observation.get_wind()['speed']))
+        return weather
