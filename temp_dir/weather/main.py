@@ -17,23 +17,6 @@ class Weather(object):
                 '50': '\U0001F32B'}
         return icons[icon]
 
-    def get_data(self, message, forecast=False):
-        try:
-            if forecast:
-                if message.location is not None:
-                    data = self.owm.three_hours_forecast_at_coords(message.location.latitude, message.location.longitude)
-                else:
-                    data = self.owm.three_hours_forecast(message.text)
-            else:
-                if message.location is not None:
-                    data = self.owm.weather_at_coords(message.location.latitude, message.location.longitude)
-                else:
-                    data = self.owm.weather_at_place(message.text)
-            return data
-        except Exception as error:
-            print(f'Weather get weather data unsuccessful, unexpected error occurred: {error}')
-            return False
-
     def is_online(self):
         try:
             if self.owm.is_API_online():
@@ -42,13 +25,32 @@ class Weather(object):
             print(f'Weather is online unsuccessful, unexpected error occurred: {error}')
             return False
 
+    def get_data(self, message, forecast=False):
+        try:
+            if forecast:
+                if message.location is not None:
+                    data = self.owm.three_hours_forecast_at_coords(message.location.latitude, message.location.longitude)
+                else:
+                    data = self.owm.three_hours_forecast(message.text)
+                location = data.get_forecast().get_location()
+            else:
+                if message.location is not None:
+                    data = self.owm.weather_at_coords(message.location.latitude, message.location.longitude)
+                else:
+                    data = self.owm.weather_at_place(message.text)
+                location = data.get_location()
+            return data, location
+        except Exception as error:
+            print(f'Weather get weather data unsuccessful, unexpected error occurred: {error}')
+            return False
+
     def get_weather(self, data, timer=None):
         if timer:
-            observation = data.get_weather_at(timer)
-            location = data.get_forecast().get_location()
+            observation = data[0].get_weather_at(timer)
+            location = data[1]
         else:
-            observation = data.get_weather()
-            location = data.get_location()
+            observation = data[0].get_weather()
+            location = data[1]
         tf = tzwhere.tzwhere()
         weather = dict(LocationName = location.get_name(),
                         TimeZone = tf.tzNameAt(location.get_lat(), location.get_lon()),
