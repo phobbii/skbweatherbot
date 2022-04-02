@@ -1,7 +1,3 @@
-from pytz import timezone
-from datetime import datetime
-
-
 class Answers(object):
 
     def __init__(self, author_name, author_email, author_linkedin, author_tg, 
@@ -28,6 +24,7 @@ class Answers(object):
         answer += f'\U0001F537 Прогноз на 3 дня - /{self.forecast_cmd}.\n'
         answer += f'\U0001F537 Помощь - /{self.help_cmd}.\n'
         answer += f'\U0001F537 Информации об авторе - /{self.author_cmd}.\n'
+        return answer
 
     def author(self):
         answer = f'\U0001F537 Author: <b>{self.author_name}</b>\n'
@@ -71,33 +68,29 @@ class Answers(object):
         answer += f'\U0001F537 Информации об авторе - {self.author_cmd}.\n'
         return answer
 
-    def weather(self, username, location_name, icon, detailed_status, temp, pressure, humidity, wind_speed, tzone=None):
-        answer = f'{username}, в <b>{location_name}</b>\n\n'
-        if tzone:
-            tz = timezone(tzone)
-            current_time = datetime.utcnow() + tz.utcoffset(datetime.utcnow())
-            answer += f'\U0001F539 <i>Часовой пояс:</i> <b>{tzone}</b>\n'
-            answer += f'\U0001F539 <i>Дата:</i> \U0001F4C6 <b>{str(current_time).split()[0]}</b>\n'
-            answer += f'\U0001F539 <i>Текущее время:</i> \U0000231A <b>{str(current_time).split()[-1].split(".")[0]}</b>\n'
-        answer += f'\U0001F539 <i>Статус:</i> {icon} <b>{detailed_status}</b>\n'
-        answer += f'\U0001F539 <i>Температура воздуха:</i> \U0001F321 <b>{temp} {self.degree_sign}C</b>\n'
-        answer += f'\U0001F539 <i>Давление:</i> <b>{pressure} мм</b>\n'
-        answer += f'\U0001F539 <i>Влажность:</i> <b>{humidity} %</b>\n'
-        answer += f'\U0001F539 <i>Скорость ветра:</i> <b>{wind_speed} м/c</b>\n\n'
+    def weather(self, username, location_details, weather_details):
+        answer = f'{username}, в <b>{location_details["LocationName"]}</b>\n\n'
+        answer += f'\U0001F539 <i>Часовой пояс:</i> <b>{location_details["TimeZone"]}</b>\n'
+        answer += f'\U0001F539 <i>Дата:</i> \U0001F4C6 <b>{location_details["CurrentTime"].split()[0]}</b>\n'
+        answer += f'\U0001F539 <i>Текущее время:</i> \U0000231A <b>{location_details["CurrentTime"].split()[-1].split(".")[0]}</b>\n'
+        answer += f'\U0001F539 <i>Статус:</i> {weather_details["Icon"]} <b>{weather_details["DetailedStatus"]}</b>\n'
+        answer += f'\U0001F539 <i>Температура воздуха:</i> \U0001F321 <b>{weather_details["Temp"]} {self.degree_sign}C</b>\n'
+        answer += f'\U0001F539 <i>Давление:</i> <b>{weather_details["Pressure"]} мм</b>\n'
+        answer += f'\U0001F539 <i>Влажность:</i> <b>{weather_details["Humidity"]} %</b>\n'
+        answer += f'\U0001F539 <i>Скорость ветра:</i> <b>{weather_details["WindSpeed"]} м/c</b>\n\n'
         return answer
 
-    def forecast_weather(self, username=None, location_name=None, tzone=None, date=None, icon=None, 
-                         detailed_status=None, temp=None, pressure=None, humidity=None, wind_speed=None):
-        if username:
-            answer = f'{username}, в <b>{location_name}</b>\n'
-            answer += f'\U0001F539 <i>Часовой пояс:</i> <b>{tzone}</b>\n\n'
-        else:
-            answer = f'\U0001F539 <i>Дата:</i>\U0001F4C6 <b>{date}</b>\n'
-            answer += f'\U0001F539 <i>Статус:</i> {icon} <b>{detailed_status}</b>\n'
-            answer += f'\U0001F539 <i>Температура воздуха:</i> \U0001F321 <b>{temp} {self.degree_sign}C</b>\n'
-            answer += f'\U0001F539 <i>Давление:</i> <b>{pressure} мм</b>\n'
-            answer += f'\U0001F539 <i>Влажность:</i> <b>{humidity} %</b>\n'
-            answer += f'\U0001F539 <i>Скорость ветра:</i> <b>{wind_speed} м/c</b>\n\n'
+    def forecast_weather(self, username=None, location_details=None, weather_details=None):
+        if username and location_details:
+            answer = f'{username}, в <b>{location_details["LocationName"]}</b>\n'
+            answer += f'\U0001F539 <i>Часовой пояс:</i> <b>{location_details["TimeZone"]}</b>\n\n'
+        elif location_details and weather_details:
+            answer = f'\U0001F539 <i>Дата:</i>\U0001F4C6 <b>{location_details["CurrentTime"].split()[0]}</b>\n'
+            answer += f'\U0001F539 <i>Статус:</i> {weather_details["Icon"]} <b>{weather_details["DetailedStatus"]}</b>\n'
+            answer += f'\U0001F539 <i>Температура воздуха:</i> \U0001F321 <b>{weather_details["Temp"]} {self.degree_sign}C</b>\n'
+            answer += f'\U0001F539 <i>Давление:</i> <b>{weather_details["Pressure"]} мм</b>\n'
+            answer += f'\U0001F539 <i>Влажность:</i> <b>{weather_details["Humidity"]} %</b>\n'
+            answer += f'\U0001F539 <i>Скорость ветра:</i> <b>{weather_details["WindSpeed"]} м/c</b>\n\n'
         return answer
 
     def service_unavailable(self, username):

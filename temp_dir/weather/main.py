@@ -1,4 +1,5 @@
-import re
+import re, pytz
+from datetime import datetime
 from pyowm import OWM
 from tzwhere import tzwhere
 
@@ -44,20 +45,26 @@ class Weather(object):
             print(f'Weather get weather data unsuccessful, unexpected error occurred: {error}')
             return False
 
+    def get_location_details(self, location):
+        tf = tzwhere.tzwhere()
+        timezone_str = tf.tzNameAt(location.get_lat(), location.get_lon())
+        timezone = pytz.timezone(timezone_str)
+        dt = datetime.utcnow()
+        current_time = dt + timezone.utcoffset(dt)
+        location_info = dict(LocationName = location.get_name(),
+                        TimeZone = timezone_str,
+                        CurrentTime = current_time)
+        return location_info
+
     def get_weather(self, data, timer=None):
         if timer:
             observation = data[0].get_weather_at(timer)
-            location = data[1]
         else:
             observation = data[0].get_weather()
-            location = data[1]
-        tf = tzwhere.tzwhere()
-        weather = dict(LocationName = location.get_name(),
-                        TimeZone = tf.tzNameAt(location.get_lat(), location.get_lon()),
-                        Icon = self.__icon(observation.get_weather_icon_name()),
-                        DetailedStatus = observation.get_detailed_status(),
-                        Temp = int(observation.get_temperature('celsius')['temp']),
-                        Pressure = int(float(observation.get_pressure()['press']) * 0.75),
-                        Humidity = observation.get_humidity(),
-                        WindSpeed = int(observation.get_wind()['speed']))
-        return weather
+        weather_info = dict(Icon = self.__icon(observation.get_weather_icon_name()),
+                    DetailedStatus = observation.get_detailed_status(),
+                    Temp = int(observation.get_temperature('celsius')['temp']),
+                    Pressure = int(float(observation.get_pressure()['press']) * 0.75),
+                    Humidity = observation.get_humidity(),
+                    WindSpeed = int(observation.get_wind()['speed']))
+        return weather_info

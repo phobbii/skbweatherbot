@@ -1,6 +1,5 @@
-import telebot, re, random, pytz
-from datetime import datetime, timedelta
-from tzwhere import tzwhere
+import telebot, re, random
+from datetime import timedelta
 from ..handlers.main import Messages
 from ..generators.main import Answers
 from ..weather.main import Weather
@@ -9,7 +8,8 @@ from ..weather.main import Weather
 class Telebot(object):
 
     def __init__(self, author_name, author_email, author_linkedin, author_tg, telebot_auth, owm_auth, owm_language='ru',
-                sleep_timer=5, location_cmd='location', forecast_cmd='forecast', help_cmd='help', author_cmd='author'):
+                sleep_timer=5, location_cmd='location', forecast_cmd='forecast', help_cmd='help', author_cmd='author', 
+                example_city_name='Kharkiv'):
         self.messages = Messages(telebot_auth, sleep_timer)
         self.answers = Answers(author_name, author_email, author_linkedin, author_tg, 
                             location_cmd, forecast_cmd, help_cmd, author_cmd)
@@ -19,6 +19,7 @@ class Telebot(object):
         self.forecast_cmd = forecast_cmd
         self.help_cmd = help_cmd
         self.author_cmd = author_cmd
+        self.example_city_name = example_city_name
 
     def __get_username(message):
         if message.from_user.first_name is not None:
@@ -53,6 +54,25 @@ class Telebot(object):
         self.messages.send_action(message.chat.id, 'typing')
         self.messages.send_msg(message.chat.id, answer, reply_markup=keyboard)
         self.messages.send_sticker(message.chat.id, 'CAADAgADfQIAAvnkbAABcAABA648YQ08FgQ')
+
+    def send_help(self, message):
+        keyboard = telebot.types.InlineKeyboardMarkup(row_width=2)
+        location = telebot.types.InlineKeyboardButton(text='location', callback_data='location')
+        forecast = telebot.types.InlineKeyboardButton(text='forecast', callback_data='forecast')
+        author = telebot.types.InlineKeyboardButton(text='author', callback_data='author')
+        keyboard.add(location, forecast, author)
+        username = self.__get_username(message)
+        answer = self.answers.welcome_help(username, city_name=self.example_city_name)
+        self.messages.send_action(message.chat.id, 'typing')
+        self.messages.send_msg(message.chat.id, answer, reply_markup=keyboard, parse_mode='HTML')
+        self.messages.send_sticker(message.chat.id, 'CAADAgADxwIAAvnkbAABx601cOaIcf8WBA')
+
+    def send_author(self, message):
+        answer = self.answers.author()
+        self.messages.send_action(message.chat.id, 'typing')
+        self.messages.send_msg(message.chat.id, answer, reply_markup=telebot.types.ReplyKeyboardRemove(selective=False), 
+                            parse_mode='HTML')
+        self.messages.send_sticker(message.chat.id, 'CAADAgADtQEAAvnkbAABxHAP4NXF1FcWBA')
 
     def geo(self, message):
         keyboard = telebot.types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
@@ -96,23 +116,13 @@ class Telebot(object):
             else:
                 forecast_data = self.weather.get_data(message, forecast=True)
                 if forecast_data:
-                    location = forecast_data[1]
-                    tf = tzwhere.tzwhere()
-                    timezone_str = tf.tzNameAt(location.get_lat(), location.get_lon())
-                    timezone = pytz.timezone(timezone_str)
-                    dt = datetime.utcnow()
-                    current_time = dt + timezone.utcoffset(dt)
-                    answer = self.answers.forecast_weather(username=username, 
-                                                        location_name=location.get_name(), tzone=timezone_str)
+                    location_details = self.weather.get_location_details(forecast_data[1])
+                    answer = self.answers.forecast_weather(username=username, location_details=location_details)
                     for i in range(1, 4):
-                        timer = current_time + datetime.timedelta(days=i, hours=0)
+                        timer = location_details["CurrentTime"] + timedelta(days=i, hours=0)
                         forecast_weather = self.weather.get_weather(forecast_data, timer=timer)
-                        answer += self.answers.forecast_weather(date=str(timer).split()[0], icon=forecast_weather['Icon'], 
-                                                                detailed_status=forecast_weather['DetailedStatus'], 
-                                                                temp=forecast_weather['Temp'], 
-                                                                pressure=forecast_weather['Pressure'], 
-                                                                humidity=forecast_weather['Humidity'], 
-                                                                wind_speed=forecast_weather['WindSpeed'])
+                        answer += self.answers.forecast_weather(location_details=location_details, 
+                                                                weather_details=forecast_weather)
                     self.messages.send_action(message.chat.id, 'typing')
                     self.messages.reply_to(message, answer, reply_markup=telebot.types.ReplyKeyboardRemove(selective=False), 
                                         parse_mode='HTML')
