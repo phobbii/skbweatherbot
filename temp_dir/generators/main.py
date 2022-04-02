@@ -57,7 +57,7 @@ class Answers(object):
 
     def forecast_errors(self, username=None, city_name=None):
         if username and city_name is None:
-            answer = f'{username.title()}, пожалуйста введите название города латиницей.\n'
+            answer = f'{username}, пожалуйста введите название города латиницей.\n'
         elif username is None and city_name:
             answer = f'<b>{str(city_name).capitalize()}</b> не найден!\n'
         answer += f'\U0001F537 Прогноз погоды по местоположению - "\U0001F310 {self.location_cmd}".\n'
@@ -65,14 +65,14 @@ class Answers(object):
         return answer
 
     def forecast_help(self, username, city_name):
-        answer = f'{username.title()}, введите название города латиницей.\n'
+        answer = f'{username}, введите название города латиницей.\n'
         answer += f'\U0001F537 Пример: <b>{city_name}</b>.\n'
         answer += f'\U0001F537 Прогноз погоды по местоположению - "\U0001F310 {self.location_cmd}".\n'
         answer += f'\U0001F537 Информации об авторе - {self.author_cmd}.\n'
         return answer
 
     def weather(self, username, location_name, icon, detailed_status, temp, pressure, humidity, wind_speed, tzone=None):
-        answer = f'{username.title()}, в <b>{location_name}</b>\n\n'
+        answer = f'{username}, в <b>{location_name}</b>\n\n'
         if tzone:
             tz = timezone(tzone)
             current_time = datetime.utcnow() + tz.utcoffset(datetime.utcnow())
@@ -89,7 +89,7 @@ class Answers(object):
     def forecast_weather(self, username=None, location_name=None, tzone=None, date=None, icon=None, 
                          detailed_status=None, temp=None, pressure=None, humidity=None, wind_speed=None):
         if username:
-            answer = f'{username.title()}, в <b>{location_name}</b>\n'
+            answer = f'{username}, в <b>{location_name}</b>\n'
             answer += f'\U0001F539 <i>Часовой пояс:</i> <b>{tzone}</b>\n\n'
         else:
             answer = f'\U0001F539 <i>Дата:</i>\U0001F4C6 <b>{date}</b>\n'
