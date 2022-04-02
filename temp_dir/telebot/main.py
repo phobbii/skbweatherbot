@@ -8,7 +8,7 @@ from ..weather.main import Weather
 
 class Telebot(object):
 
-    def __init__(self, telebot_auth, owm_auth, owm_language='ru', author_name, author_email, author_linkedin, author_tg,
+    def __init__(self, author_name, author_email, author_linkedin, author_tg, telebot_auth, owm_auth, owm_language='ru',
                 sleep_timer=5, location_cmd='location', forecast_cmd='forecast', help_cmd='help', author_cmd='author'):
         self.messages = Messages(telebot_auth, sleep_timer)
         self.answers = Answers(author_name, author_email, author_linkedin, author_tg, 
