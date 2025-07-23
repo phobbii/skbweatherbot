@@ -91,7 +91,7 @@ substitutions:
     _SERVICE_REPO_NAME           : skbweatherbot
     _INSTANCE_NAME               : dlinst01
     _INSTANCE_TYPE               : e2-micro
-    _INSTANCE_IMAGE              : projects/cos-cloud/global/images/cos-stable-93-16623-39-21
+    _INSTANCE_IMAGE              : projects/ubuntu-os-cloud/global/images/ubuntu-2204-jammy-v20230720
     _INSTANCE_LABELS             : scheduled=true
     _INSTANCE_NETWORK_TAGS       : weatherbot
     _INSTANCE_MAINTANANCE_POLICY : MIGRATE
