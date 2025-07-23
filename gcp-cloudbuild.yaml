@@ -51,30 +51,32 @@ steps:
   args:
   - '-c'
   - |-
+    STARTUP_SCRIPT=$(cat <<EOF
+    docker run -d --restart=always -e OWN_KEY="\$OWN_KEY" -p 8443:8443 $_SERVICE_IMAGE
+    EOF
+    )
+
     if [[ -z $(gcloud compute instances list --filter="name=('NAME' $_INSTANCE_NAME)" --format="value(NAME)") ]]; then
-        gcloud compute instances create-with-container $_INSTANCE_NAME --machine-type=$_INSTANCE_TYPE \
-            --image=$_INSTANCE_IMAGE --zone=$_SERVICE_REGION-$_SERVICE_ZONE --labels=$_INSTANCE_LABELS --tags=$_INSTANCE_NETWORK_TAGS\
+        gcloud compute instances create $_INSTANCE_NAME --machine-type=$_INSTANCE_TYPE \
+            --image=$_INSTANCE_IMAGE --zone=$_SERVICE_REGION-$_SERVICE_ZONE --labels=$_INSTANCE_LABELS --tags=$_INSTANCE_NETWORK_TAGS \
             --maintenance-policy=$_INSTANCE_MAINTANANCE_POLICY --address=$(cat /workspace/public_ip.txt) --network-tier=$_NETWORK_TIER \
-            --restart-on-failure --container-image=$_SERVICE_IMAGE --container-restart-policy="always" --boot-disk-size=$_INSTANCE_DISK_SIZE \
-            --container-env=OWN_KEY=$$OWM_KEY
+            --boot-disk-size=$_INSTANCE_DISK_SIZE --metadata=startup-script=$STARTUP_SCRIPT
         gcloud compute instances remove-metadata $_INSTANCE_NAME --zone=$_SERVICE_REGION-$_SERVICE_ZONE --keys=google-logging-enabled
     else
         if [[ $(gcloud compute instances list --filter="name=('NAME' $_INSTANCE_NAME)" --format="value(STATUS)") == "TERMINATED" ]]; then
             gcloud compute instances delete $_INSTANCE_NAME --zone $_SERVICE_REGION-$_SERVICE_ZONE --quiet
-            gcloud compute instances create-with-container $_INSTANCE_NAME --machine-type=$_INSTANCE_TYPE \
-                --image=$_INSTANCE_IMAGE --zone=$_SERVICE_REGION-$_SERVICE_ZONE --labels=$_INSTANCE_LABELS --tags=$_INSTANCE_NETWORK_TAGS\
+            gcloud compute instances create $_INSTANCE_NAME --machine-type=$_INSTANCE_TYPE \
+                --image=$_INSTANCE_IMAGE --zone=$_SERVICE_REGION-$_SERVICE_ZONE --labels=$_INSTANCE_LABELS --tags=$_INSTANCE_NETWORK_TAGS \
                 --maintenance-policy=$_INSTANCE_MAINTANANCE_POLICY --address=$(cat /workspace/public_ip.txt) --network-tier=$_NETWORK_TIER \
-                --restart-on-failure --container-image=$_SERVICE_IMAGE --container-restart-policy="always" --boot-disk-size=$_INSTANCE_DISK_SIZE \
-                --container-env=OWN_KEY=$$OWM_KEY
+                --boot-disk-size=$_INSTANCE_DISK_SIZE --metadata=startup-script=$STARTUP_SCRIPT
             gcloud compute instances stop $_INSTANCE_NAME --zone $_SERVICE_REGION-$_SERVICE_ZONE
             gcloud compute instances remove-metadata $_INSTANCE_NAME --zone=$_SERVICE_REGION-$_SERVICE_ZONE --keys=google-logging-enabled
         elif [[ $(gcloud compute instances list --filter="name=('NAME' $_INSTANCE_NAME)" --format="value(STATUS)") == "RUNNING" ]]; then
             gcloud compute instances delete $_INSTANCE_NAME --zone $_SERVICE_REGION-$_SERVICE_ZONE --quiet
-            gcloud compute instances create-with-container $_INSTANCE_NAME --machine-type=$_INSTANCE_TYPE \
+            gcloud compute instances create $_INSTANCE_NAME --machine-type=$_INSTANCE_TYPE \
                 --image=$_INSTANCE_IMAGE --zone=$_SERVICE_REGION-$_SERVICE_ZONE --labels=$_INSTANCE_LABELS --tags=$_INSTANCE_NETWORK_TAGS \
                 --maintenance-policy=$_INSTANCE_MAINTANANCE_POLICY --address=$(cat /workspace/public_ip.txt) --network-tier=$_NETWORK_TIER \
-                --restart-on-failure --container-image=$_SERVICE_IMAGE --container-restart-policy="always" --boot-disk-size=$_INSTANCE_DISK_SIZE \
-                --container-env=OWN_KEY=$$OWM_KEY
+                --boot-disk-size=$_INSTANCE_DISK_SIZE --metadata=startup-script=$STARTUP_SCRIPT
             gcloud compute instances remove-metadata $_INSTANCE_NAME --zone=$_SERVICE_REGION-$_SERVICE_ZONE --keys=google-logging-enabled
         fi
     fi
