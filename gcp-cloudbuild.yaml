@@ -52,7 +52,7 @@ steps:
   - '-c'
   - |-
     STARTUP_SCRIPT=$(cat <<EOF
-    docker run -d --restart=always -e OWN_KEY="\$OWN_KEY" -p 8443:8443 $_SERVICE_IMAGE
+    docker run -d --restart=always -e OWN_KEY="\$OWMKEY" -p 8443:8443 $_SERVICE_IMAGE
     EOF
     )
 
@@ -84,7 +84,7 @@ steps:
 availableSecrets:
   secretManager:
   - versionName: projects/${PROJECT_ID}/secrets/${_SM_OWM_KEY_SECRET_NAME}/versions/latest
-    env: OWM_KEY
+    env: OWMKEY
   - versionName: projects/${PROJECT_ID}/secrets/${_SM_TELEBOT_KEY_SECRET_NAME}/versions/latest
     env: TELEBOT_KEY
 
