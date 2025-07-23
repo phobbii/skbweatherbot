@@ -65,7 +65,7 @@ steps:
               sudo apt-get update
               sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
               sudo gcloud auth configure-docker us-east1-docker.pkg.dev --quiet
-              sudo docker run -d --restart=always -e OWN_KEY=\"\$OWNKEY\" -p 8443:8443"
+              sudo docker run -d --restart=always -e OWN_KEY=\"\$OWMKEY\" -p 8443:8443"
         gcloud compute instances remove-metadata $_INSTANCE_NAME --zone=$_SERVICE_REGION-$_SERVICE_ZONE --keys=google-logging-enabled
     else
         if [[ $(gcloud compute instances list --filter="name=('NAME' $_INSTANCE_NAME)" --format="value(STATUS)") == "TERMINATED" ]]; then
@@ -83,7 +83,7 @@ steps:
                   sudo apt-get update
                   sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
                   sudo gcloud auth configure-docker us-east1-docker.pkg.dev --quiet
-                  sudo docker run -d --restart=always -e OWN_KEY=\"\$OWNKEY\" -p 8443:8443"
+                  sudo docker run -d --restart=always -e OWN_KEY=\"\$OWMKEY\" -p 8443:8443"
             gcloud compute instances stop $_INSTANCE_NAME --zone $_SERVICE_REGION-$_SERVICE_ZONE
             gcloud compute instances remove-metadata $_INSTANCE_NAME --zone=$_SERVICE_REGION-$_SERVICE_ZONE --keys=google-logging-enabled
         elif [[ $(gcloud compute instances list --filter="name=('NAME' $_INSTANCE_NAME)" --format="value(STATUS)") == "RUNNING" ]]; then
@@ -101,7 +101,7 @@ steps:
                   sudo apt-get update
                   sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
                   sudo gcloud auth configure-docker us-east1-docker.pkg.dev --quiet
-                  sudo docker run -d --restart=always -e OWN_KEY=\"\$OWNKEY\" -p 8443:8443"
+                  sudo docker run -d --restart=always -e OWN_KEY=\"\$OWMKEY\" -p 8443:8443"
             gcloud compute instances remove-metadata $_INSTANCE_NAME --zone=$_SERVICE_REGION-$_SERVICE_ZONE --keys=google-logging-enabled
         fi
     fi
