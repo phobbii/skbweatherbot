@@ -52,7 +52,7 @@ steps:
   - '-c'
   - |-
     STARTUP_SCRIPT=$(cat <<EOF
-    docker run -d --restart=always -e OWN_KEY="\$OWMKEY" -p 8443:8443 $_SERVICE_IMAGE
+    docker run -d --restart=always -p 8443:8443 $_SERVICE_IMAGE
     EOF
     )
 
