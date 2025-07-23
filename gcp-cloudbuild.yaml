@@ -61,11 +61,11 @@ steps:
               sudo install -m 0755 -d /etc/apt/keyrings
               sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
               sudo chmod a+r /etc/apt/keyrings/docker.asc
-              echo \"deb [arch=\$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \$(lsb_release -cs) stable\" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+              echo \"deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable\" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
               sudo apt-get update
               sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
               sudo gcloud auth configure-docker $_SERVICE_REGION-docker.pkg.dev --quiet
-              sudo docker run -d --restart=always -e OWN_KEY=\"\$(gcloud secrets versions access latest --secret=$_SM_OWM_KEY_SECRET_NAME)" -p 8443:8443 $_SERVICE_IMAGE
+              sudo docker run -d --restart=always -e OWN_KEY=\"$(gcloud secrets versions access latest --secret=$_SM_OWM_KEY_SECRET_NAME)\" -p 8443:8443 $_SERVICE_IMAGE
             "
         gcloud compute instances remove-metadata $_INSTANCE_NAME --zone=$_SERVICE_REGION-$_SERVICE_ZONE --keys=google-logging-enabled
     else
@@ -81,11 +81,11 @@ steps:
                   sudo install -m 0755 -d /etc/apt/keyrings
                   sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
                   sudo chmod a+r /etc/apt/keyrings/docker.asc
-                  echo \"deb [arch=\$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \$(lsb_release -cs) stable\" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+                  echo \"deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable\" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
                   sudo apt-get update
                   sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
                   sudo gcloud auth configure-docker $_SERVICE_REGION-docker.pkg.dev --quiet
-                  sudo docker run -d --restart=always -e OWN_KEY=\"\$(gcloud secrets versions access latest --secret=$_SM_OWM_KEY_SECRET_NAME)" -p 8443:8443 $_SERVICE_IMAGE
+                  sudo docker run -d --restart=always -e OWN_KEY=\"$(gcloud secrets versions access latest --secret=$_SM_OWM_KEY_SECRET_NAME)\" -p 8443:8443 $_SERVICE_IMAGE
                 "
             gcloud compute instances stop $_INSTANCE_NAME --zone $_SERVICE_REGION-$_SERVICE_ZONE
             gcloud compute instances remove-metadata $_INSTANCE_NAME --zone=$_SERVICE_REGION-$_SERVICE_ZONE --keys=google-logging-enabled
@@ -101,11 +101,11 @@ steps:
                   sudo install -m 0755 -d /etc/apt/keyrings
                   sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
                   sudo chmod a+r /etc/apt/keyrings/docker.asc
-                  echo \"deb [arch=\$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \$(lsb_release -cs) stable\" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+                  echo \"deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable\" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
                   sudo apt-get update
                   sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
                   sudo gcloud auth configure-docker $_SERVICE_REGION-docker.pkg.dev --quiet
-                  sudo docker run -d --restart=always -e OWN_KEY=\"\$(gcloud secrets versions access latest --secret=$_SM_OWM_KEY_SECRET_NAME)" -p 8443:8443 $_SERVICE_IMAGE
+                  sudo docker run -d --restart=always -e OWN_KEY=\"$(gcloud secrets versions access latest --secret=$_SM_OWM_KEY_SECRET_NAME)\" -p 8443:8443 $_SERVICE_IMAGE
                 "
             gcloud compute instances remove-metadata $_INSTANCE_NAME --zone=$_SERVICE_REGION-$_SERVICE_ZONE --keys=google-logging-enabled
         fi
