@@ -5,10 +5,10 @@ import telebot, pyowm, re, random, datetime, pytz, time, os, sys, logging, ssl, 
 from tzwhere import tzwhere
 from aiohttp import web
 
-if 'OWN_KEY' in os.environ and os.environ['OWN_KEY'] is not None:
-    OWN_KEY = os.environ['OWN_KEY']
+if 'OWM_KEY' in os.environ and os.environ['OWM_KEY'] is not None:
+    OWM_KEY = os.environ['OWM_KEY']
 else:
-    sys.exit('OWN_KEY not exist or null')
+    sys.exit('OWM_KEY not exist or null')
 
 if 'TELEBOT_KEY' in os.environ and os.environ['TELEBOT_KEY'] is not None:
     TELEBOT_KEY = os.environ['TELEBOT_KEY']
@@ -67,7 +67,7 @@ else:
 WEBHOOK_URL_BASE = "https://{}:{}".format(WEBHOOK_HOST, WEBHOOK_PORT)
 WEBHOOK_URL_PATH = "/{}/".format(TELEBOT_KEY)
 
-owm = pyowm.OWM(API_key=OWN_KEY, language="ru")
+owm = pyowm.OWM(API_key=OWM_KEY, language="ru")
 bot = telebot.TeleBot(TELEBOT_KEY)
 logger = telebot.logger
 telebot.logger.setLevel(logging.INFO)

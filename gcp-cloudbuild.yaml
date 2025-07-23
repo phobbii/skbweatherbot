@@ -36,7 +36,7 @@ steps:
   args:
   - '-c'
   - |-
-    docker build --build-arg OWN_KEY=$$OWM_KEY --build-arg TELEBOT_KEY=$$TELEBOT_KEY \
+    docker build --build-arg OWM_KEY=$$OWM_KEY --build-arg TELEBOT_KEY=$$TELEBOT_KEY \
         --build-arg WEBHOOK_HOST=$(cat /workspace/public_ip.txt) --build-arg WEBHOOK_PORT=$_HTTPS_PORT \
         -t $_SERVICE_IMAGE . -f Dockerfile
   
@@ -134,6 +134,6 @@ substitutions:
     _INSTANCE_MAINTANANCE_POLICY : MIGRATE
     _INSTANCE_DISK_SIZE          : "30"
     _NETWORK_TIER                : PREMIUM
-    _SM_OWM_KEY_SECRET_NAME      : WEATHERBOT_OWN_KEY
+    _SM_OWM_KEY_SECRET_NAME      : WEATHERBOT_OWM_KEY
     _SM_TELEBOT_KEY_SECRET_NAME  : WEATHERBOT_TELEGRAM_KEY
     _HTTPS_PORT                  : "8443"
