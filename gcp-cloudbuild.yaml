@@ -47,7 +47,7 @@ steps:
 - name: 'gcr.io/cloud-builders/gcloud'
   id: DEPLOY
   entrypoint: 'bash'
-  secretEnv: ['OWM_KEY']
+  secretEnv: ['OWMKEY']
   args:
   - '-c'
   - |-
