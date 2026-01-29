@@ -1,0 +1,230 @@
+# Architecture Diagram
+
+## Data Flow
+
+```
+Telegram Server
+      ↓
+   Webhook (HTTPS)
+      ↓
+   src/bot.py (aiohttp handler)
+      ↓
+   telebot.process_new_updates()
+      ↓
+   ┌─────────────────────────────────┐
+   │  Handler Registration (bot.py)  │
+   └─────────────────────────────────┘
+      ↓
+   ┌──────────────┬──────────────┬──────────────┐
+   ↓              ↓              ↓              ↓
+Commands      Messages      Callbacks    Wrong Content
+   ↓              ↓              ↓              ↓
+src/handlers/ src/handlers/ src/handlers/ src/handlers/
+commands.py   messages.py   callbacks.py  messages.py
+   ↓              ↓              ↓              ↓
+   └──────────────┴──────────────┴──────────────┘
+                  ↓
+         ┌────────┴────────┐
+         ↓                 ↓
+   src/services/      src/utils/
+   weather_service.py bot_helpers.py
+         ↓                 ↓
+   ┌─────┴─────┐    ┌─────┴─────┐
+   ↓           ↓    ↓           ↓
+OpenWeatherMap  Retry Logic  Keyboards
+   API          Send Messages  Formatting
+```
+
+## Module Dependencies
+
+```
+src/bot.py
+├── src/config.py (settings)
+├── src/services/weather_service.py
+│   └── src/config.py
+├── src/handlers/commands.py
+│   ├── src/services/weather_service.py
+│   └── src/utils/bot_helpers.py
+├── src/handlers/messages.py
+│   ├── src/services/weather_service.py
+│   └── src/utils/bot_helpers.py
+└── src/handlers/callbacks.py
+    └── src/utils/bot_helpers.py
+
+src/utils/bot_helpers.py
+└── (no dependencies - pure utilities)
+
+src/services/weather_service.py
+└── src/config.py
+
+src/config.py
+└── (no dependencies - pure configuration)
+```
+
+## Class Relationships
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                     src/bot.py                          │
+│  - Initializes bot, services, handlers                  │
+│  - Registers message handlers                           │
+│  - Starts aiohttp server                                │
+└─────────────────────────────────────────────────────────┘
+                          │
+        ┌─────────────────┼─────────────────┐
+        ↓                 ↓                 ↓
+┌──────────────┐  ┌──────────────┐  ┌──────────────┐
+│WeatherService│  │CommandHandlers│ │MessageHandlers│
+├──────────────┤  ├──────────────┤  ├──────────────┤
+│+ owm         │  │+ bot         │  │+ bot         │
+│+ tz_finder   │  │+ weather     │  │+ weather     │
+├──────────────┤  ├──────────────┤  ├──────────────┤
+│+ is_online() │  │+ handle_start│  │+ handle_     │
+│+ get_current │  │+ handle_help │  │  weather_req │
+│+ get_forecast│  │+ handle_     │  │+ handle_wrong│
+│+ format_*()  │  │  forecast    │  │  _content    │
+└──────────────┘  └──────────────┘  └──────────────┘
+                          │
+                          ↓
+                  ┌──────────────┐
+                  │CallbackHandlers│
+                  ├──────────────┤
+                  │+ bot         │
+                  ├──────────────┤
+                  │+ handle_     │
+                  │  callback    │
+                  └──────────────┘
+```
+
+## Request Flow Examples
+
+### Example 1: User sends city name
+
+```
+1. User: "London"
+2. Telegram → Webhook → src/bot.py → handle_webhook()
+3. src/bot.py → weather_message() → MessageHandlers.handle_weather_request()
+4. MessageHandlers → WeatherService.get_current_weather(city="London")
+5. WeatherService → OpenWeatherMap API
+6. WeatherService → format_current_weather()
+7. MessageHandlers → bot_helpers.reply_to_message()
+8. bot_helpers → send_with_retry() → bot.reply_to()
+9. Response sent to user
+```
+
+### Example 2: User clicks /start
+
+```
+1. User: "/start"
+2. Telegram → Webhook → src/bot.py → handle_webhook()
+3. src/bot.py → start_command() → CommandHandlers.handle_start()
+4. CommandHandlers → bot_helpers.create_inline_keyboard()
+5. CommandHandlers → bot_helpers.send_message()
+6. bot_helpers → send_with_retry() → bot.send_message()
+7. CommandHandlers → bot_helpers.send_sticker()
+8. Response sent to user
+```
+
+### Example 3: User clicks inline button
+
+```
+1. User: clicks "forecast" button
+2. Telegram → Webhook → src/bot.py → handle_webhook()
+3. src/bot.py → callback_query() → CallbackHandlers.handle_callback()
+4. CallbackHandlers → _handle_forecast_callback()
+5. CallbackHandlers → bot_helpers.create_location_keyboard()
+6. CallbackHandlers → bot_helpers.send_message()
+7. CallbackHandlers → bot.register_next_step_handler()
+8. Response sent to user
+9. Next message from user → CommandHandlers.handle_forecast_input()
+```
+
+## Error Handling Flow
+
+```
+Any API Call
+     ↓
+send_with_retry()
+     ↓
+Try API call
+     ↓
+  Success? ──Yes──→ Return result
+     ↓
+    No
+     ↓
+Log error
+     ↓
+Retry < max? ──Yes──→ Sleep → Try again
+     ↓
+    No
+     ↓
+Raise exception
+     ↓
+Handler catches
+     ↓
+Send error message to user
+```
+
+## Configuration Loading
+
+```
+Program Start
+     ↓
+Import src/config.py
+     ↓
+get_env_or_exit("OWM_KEY")
+     ↓
+get_env_or_exit("TELEBOT_KEY")
+     ↓
+get_webhook_host() → Try IP services
+     ↓
+find_ssl_files() → Scan directory
+     ↓
+All config loaded
+     ↓
+src/bot.py imports config
+     ↓
+Initialize services with config
+     ↓
+Start bot
+```
+
+## Deployment Architecture
+
+```
+                    Internet
+                       ↓
+                  [Firewall]
+                       ↓
+              [Load Balancer] (optional)
+                       ↓
+              ┌────────┴────────┐
+              ↓                 ↓
+         [Server 1]        [Server 2]
+              ↓                 ↓
+         bot.py:8443       bot.py:8443
+         (SSL/TLS)         (SSL/TLS)
+              ↓                 ↓
+         WeatherService    WeatherService
+              ↓                 ↓
+         OpenWeatherMap API (shared)
+```
+
+## Key Design Patterns Used
+
+1. **Separation of Concerns**: Each module has single responsibility
+2. **Dependency Injection**: Services passed to handlers
+3. **Factory Pattern**: Keyboard creation functions
+4. **Retry Pattern**: Generic retry wrapper
+5. **Template Method**: Format methods in WeatherService
+6. **Strategy Pattern**: Different handlers for different message types
+7. **Facade Pattern**: bot_helpers simplifies complex operations
+
+## Benefits of This Architecture
+
+✅ **Testable**: Each component can be unit tested independently
+✅ **Maintainable**: Clear structure, easy to find and modify code
+✅ **Scalable**: Easy to add new features without touching existing code
+✅ **Reusable**: Utility functions can be used across handlers
+✅ **Debuggable**: Clear flow, good logging, isolated components
+✅ **Deployable**: Clean separation allows for easy containerization
