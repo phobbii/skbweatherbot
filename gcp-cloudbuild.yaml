@@ -128,11 +128,11 @@ substitutions:
     _SERVICE_REPO_NAME           : skbweatherbot
     _INSTANCE_NAME               : dlinst01
     _INSTANCE_TYPE               : e2-micro
-    _INSTANCE_IMAGE              : projects/ubuntu-os-cloud/global/images/ubuntu-2204-jammy-v20250722
+    _INSTANCE_IMAGE              : projects/ubuntu-os-cloud/global/images/ubuntu-2204-jammy-v20260128
     _INSTANCE_LABELS             : scheduled=true
     _INSTANCE_NETWORK_TAGS       : weatherbot
     _INSTANCE_MAINTANANCE_POLICY : MIGRATE
-    _INSTANCE_DISK_SIZE          : "30"
+    _INSTANCE_DISK_SIZE          : "10"
     _NETWORK_TIER                : PREMIUM
     _SM_OWM_KEY_SECRET_NAME      : WEATHERBOT_OWM_KEY
     _SM_TELEBOT_KEY_SECRET_NAME  : WEATHERBOT_TELEGRAM_KEY
