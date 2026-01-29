@@ -1,4 +1,159 @@
-# skbweatherbot
-Telegram weather bot
-Version: 1.0
+# SKB Weather Bot
+
+Telegram weather bot providing current weather and 3-day forecasts using OpenWeatherMap API.
+
 Bot link: https://telegram.me/skbweatherbot
+
+## Project Structure
+
+```
+/
+├── Dockerfile                      # Docker build configuration
+├── deploy_container.sh             # Automated deployment script
+├── requirements.txt                # Python dependencies
+├── README.md                       # This file
+├── DOCKER.md                       # Docker deployment guide
+├── ARCHITECTURE.md                 # Architecture documentation
+└── src/                            # Source code
+    ├── bot.py                      # Main entry point
+    ├── config.py                   # Configuration and environment variables
+    ├── handlers/                   # Message and command handlers
+    │   ├── __init__.py
+    │   ├── commands.py            # Command handlers (/start, /help, etc.)
+    │   ├── messages.py            # Message handlers (weather requests)
+    │   └── callbacks.py           # Inline button callback handlers
+    ├── services/                   # Business logic
+    │   ├── __init__.py
+    │   └── weather_service.py     # Weather API integration
+    └── utils/                      # Helper functions
+        ├── __init__.py
+        └── bot_helpers.py         # Bot utility functions (retry, keyboards, etc.)
+```
+
+## Features
+
+- Current weather by city name or GPS location
+- 3-day weather forecast
+- Automatic timezone detection
+- Inline keyboard navigation
+- Retry mechanism for API calls
+- Comprehensive error handling
+- Webhook-based deployment
+
+## Requirements
+
+### Development
+- Python 3.9+
+- SSL certificate and key files (.pem and .key) in the project directory
+- Environment variables (see below)
+
+### Production (Docker)
+- Docker 17.05+
+- Linux server with public IP
+- Open HTTPS port (e.g., 8443)
+- Root access for deployment
+
+## Environment Variables
+
+Set the following environment variables before running:
+
+```bash
+export OWM_KEY="your_openweathermap_api_key"
+export TELEBOT_KEY="your_telegram_bot_token"
+export WEBHOOK_PORT="8443"
+export WEBHOOK_LISTEN="0.0.0.0"
+```
+
+## Installation
+
+### For Development (Local)
+
+1. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+2. Ensure SSL certificate files (.pem and .key) are in the `src/` directory
+
+3. Set environment variables (see above)
+
+4. Run the bot:
+```bash
+cd src
+python bot.py
+```
+
+### For Production (Docker)
+
+1. Ensure Docker is installed (version >= 17.05)
+2. Run the deployment script:
+```bash
+sudo ./deploy_container.sh --owm YOUR_KEY --telegram YOUR_TOKEN --port 8443
+```
+
+The script handles all setup automatically including SSL certificates and webhook configuration.
+
+## Running the Bot
+
+### Option 1: Direct Python (Development)
+
+```bash
+cd src
+python bot.py
+```
+
+The bot will:
+1. Detect your public IP address for webhook setup
+2. Configure the webhook with Telegram
+3. Start an aiohttp server with SSL
+4. Listen for incoming webhook requests
+
+### Option 2: Docker Container (Production)
+
+```bash
+sudo ./deploy_container.sh --owm YOUR_OWM_KEY --telegram YOUR_BOT_TOKEN --port 8443
+```
+
+The deployment script will:
+1. Detect your public IP automatically
+2. Build a Docker image with all dependencies
+3. Generate SSL certificates
+4. Configure the webhook
+5. Start the container with auto-restart enabled
+
+**Manual Docker build:**
+```bash
+docker build \
+  --build-arg OWM_KEY="your_key" \
+  --build-arg TELEBOT_KEY="your_token" \
+  --build-arg WEBHOOK_HOST="your_public_ip" \
+  --build-arg WEBHOOK_PORT="8443" \
+  -t skbweatherbot:latest .
+
+docker run -d --restart=always --name skbweatherbot -p 8443:8443 skbweatherbot:latest
+```
+
+## Bot Commands
+
+- `/start` - Welcome message and main menu
+- `/location` - Request GPS location for weather
+- `/forecast` - Get 3-day weather forecast
+- `/help` - Usage instructions
+- `/author` - Author information
+
+## Architecture Highlights
+
+### Modular Design
+- **Separation of concerns**: handlers, services, utilities, and configuration are isolated
+- **Single responsibility**: each module has a clear, focused purpose
+- **Easy to extend**: add new commands or services without touching existing code
+
+### Code Quality
+- **Type hints**: all functions have type annotations
+- **Docstrings**: comprehensive documentation
+- **Logging**: proper logging instead of print statements
+
+### Error Handling
+- **Retry mechanism**: automatic retry for failed API calls
+- **Graceful degradation**: user-friendly error messages
+- **Service availability checks**: validates API status before requests
