@@ -60,8 +60,8 @@ Set the following environment variables before running:
 ```bash
 export OWM_KEY="your_openweathermap_api_key"
 export TELEBOT_KEY="your_telegram_bot_token"
-export WEBHOOK_PORT="8443"
-export WEBHOOK_LISTEN="0.0.0.0"
+export WEBHOOK_PORT="listener_preferred_port"
+export WEBHOOK_LISTEN="your_public_ip"
 ```
 
 ## Running the Bot
