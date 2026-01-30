@@ -29,6 +29,3 @@ build/
 
 # Logs
 *.log
-
-# Docker
-.dockerignore
