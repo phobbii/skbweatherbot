@@ -73,7 +73,9 @@ export WEBHOOK_LISTEN="0.0.0.0"
 pip install -r requirements.txt
 ```
 
-2. Generate SSL certificate files (.pem and .key)
+2. Set environment variables (see above)
+
+3. Generate SSL certificate files (.pem and .key)
 ```bash
 cd src
 openssl req -newkey rsa:2048 -sha256 -nodes \
@@ -85,8 +87,6 @@ openssl req -newkey rsa:2048 -sha256 -nodes \
     -F "certificate=@url_certificate.pem" \
     https://api.telegram.org/bot${TELEBOT_KEY}/setWebhook
 ```
-
-3. Set environment variables (see above)
 
 4. Run the bot:
 ```bash
