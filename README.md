@@ -64,7 +64,7 @@ export WEBHOOK_PORT="8443"
 export WEBHOOK_LISTEN="0.0.0.0"
 ```
 
-## Installation
+## Running the Bot
 
 ### For Development (Local)
 
@@ -73,45 +73,37 @@ export WEBHOOK_LISTEN="0.0.0.0"
 pip install -r requirements.txt
 ```
 
-2. Ensure SSL certificate files (.pem and .key) are in the `src/` directory
+2. Generate SSL certificate files (.pem and .key)
+```bash
+cd src
+openssl req -newkey rsa:2048 -sha256 -nodes \
+    -keyout ${BOT_HOME}/url_private.key \
+    -x509 -days 3650 \
+    -out ${BOT_HOME}/url_certificate.pem \
+    -subj "/C=US/ST=State/O=Organization/CN=${WEBHOOK_HOST}" \
+    && curl -s -F "url=https://${WEBHOOK_HOST}:${WEBHOOK_PORT}" \
+    -F "certificate=@url_certificate.pem" \
+    https://api.telegram.org/bot${TELEBOT_KEY}/setWebhook
+```
 
 3. Set environment variables (see above)
 
 4. Run the bot:
 ```bash
-cd src
-python bot.py
+python3 bot.py
 ```
+
+The bot will:
+1. Detect your public IP address for webhook setup
+2. Start an aiohttp server with SSL
+3. Listen for incoming webhook requests
 
 ### For Production (Docker)
 
 1. Ensure Docker is installed (version >= 17.05)
 2. Run the deployment script:
 ```bash
-sudo ./deploy_container.sh --owm YOUR_KEY --telegram YOUR_TOKEN --port 8443
-```
-
-The script handles all setup automatically including SSL certificates and webhook configuration.
-
-## Running the Bot
-
-### Option 1: Direct Python (Development)
-
-```bash
-cd src
-python bot.py
-```
-
-The bot will:
-1. Detect your public IP address for webhook setup
-2. Configure the webhook with Telegram
-3. Start an aiohttp server with SSL
-4. Listen for incoming webhook requests
-
-### Option 2: Docker Container (Production)
-
-```bash
-sudo ./deploy_container.sh --owm YOUR_OWM_KEY --telegram YOUR_BOT_TOKEN --port 8443
+./deploy_container.sh --owm YOUR_KEY --telegram YOUR_TOKEN --port 8443
 ```
 
 The deployment script will:
@@ -120,18 +112,6 @@ The deployment script will:
 3. Generate SSL certificates
 4. Configure the webhook
 5. Start the container with auto-restart enabled
-
-**Manual Docker build:**
-```bash
-docker build \
-  --build-arg OWM_KEY="your_key" \
-  --build-arg TELEBOT_KEY="your_token" \
-  --build-arg WEBHOOK_HOST="your_public_ip" \
-  --build-arg WEBHOOK_PORT="8443" \
-  -t skbweatherbot:latest .
-
-docker run -d --restart=always --name skbweatherbot -p 8443:8443 skbweatherbot:latest
-```
 
 ## Bot Commands
 
@@ -151,7 +131,7 @@ docker run -d --restart=always --name skbweatherbot -p 8443:8443 skbweatherbot:l
 ### Code Quality
 - **Type hints**: all functions have type annotations
 - **Docstrings**: comprehensive documentation
-- **Logging**: proper logging instead of print statements
+- **Logging**: proper logging 
 
 ### Error Handling
 - **Retry mechanism**: automatic retry for failed API calls
