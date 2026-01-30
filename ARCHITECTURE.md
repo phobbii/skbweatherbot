@@ -189,27 +189,6 @@ Initialize services with config
 Start bot
 ```
 
-## Deployment Architecture
-
-```
-                    Internet
-                       ↓
-                  [Firewall]
-                       ↓
-              [Load Balancer] (optional)
-                       ↓
-              ┌────────┴────────┐
-              ↓                 ↓
-         [Server 1]        [Server 2]
-              ↓                 ↓
-         bot.py:8443       bot.py:8443
-         (SSL/TLS)         (SSL/TLS)
-              ↓                 ↓
-         WeatherService    WeatherService
-              ↓                 ↓
-         OpenWeatherMap API (shared)
-```
-
 ## Key Design Patterns Used
 
 1. **Separation of Concerns**: Each module has single responsibility
