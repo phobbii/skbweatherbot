@@ -60,17 +60,18 @@ WORKDIR ${BOT_HOME}
 COPY --from=base ${BOT_HOME} ${BOT_HOME}
 
 # Copy requirements and source code
-COPY requirements.txt ${BOT_HOME}/
-COPY src/ ${BOT_HOME}/src/
+COPY requirements.txt /tmp
+COPY src/ ${BOT_HOME}/
 
 RUN apk add --no-cache geos \
-    && pip install --no-cache-dir -r requirements.txt \
+    && pip install --no-cache-dir -r /tmp/requirements.txt \
+    && rm -rf /tmp/requirements.txt \
     && chown -R ${BOT_USR}:${BOT_USR} ${BOT_HOME} \
-    && rm -rf /root/.cache
+    && rm -rf /root/.cache 
 
 USER ${BOT_USR}
 
 EXPOSE ${WEBHOOK_PORT}
 
 ENTRYPOINT ["python"]
-CMD ["src/bot.py"]
+CMD ["bot.py"]
