@@ -42,14 +42,17 @@ Bot link: https://telegram.me/skbweatherbot
 
 ## Requirements
 
+**Note:** The bot requires a public static IP address for webhook functionality in both development and production environments.
+
 ### Development
 - Python 3.9+
+- Public static IP address
 - SSL certificate and key files (.pem and .key) in the project directory
 - Environment variables (see below)
 
 ### Production (Docker)
 - Docker 17.05+
-- Linux server with public IP
+- Linux server with public static IP address
 - Open HTTPS port (e.g., 8443)
 - Root access for deployment
 
