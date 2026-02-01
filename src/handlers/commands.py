@@ -32,7 +32,7 @@ class CommandHandlers:
         answer = f"Привет {username.title()}.\n"
         answer += "\U0001F537 Введите город латиницей для получения погоды или\n"
         answer += "отправьте текущее местоположение - /location.\n"
-        answer += "\U0001F537 Прогноз на 3 дня - /forecast.\n"
+        answer += "\U0001F537 Прогноз на 5 дней - /forecast.\n"
         answer += "\U0001F537 Помощь - /help.\n"
         answer += "\U0001F537 Информации об авторе - /author.\n"
         
@@ -121,7 +121,7 @@ class CommandHandlers:
         answer = f"{username.title()}, введите название города латиницей.\n"
         answer += "\U0001F537 Пример: <b>Kharkiv</b>.\n"
         answer += "\U0001F537 Прогноз погоды по местоположению - /location.\n"
-        answer += "\U0001F537 Прогноз на 3 дня - /forecast.\n"
+        answer += "\U0001F537 Прогноз на 5 дней - /forecast.\n"
         answer += "\U0001F537 Информации об авторе - /author.\n"
         
         send_action(self.bot, message.chat.id, 'typing')

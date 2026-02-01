@@ -45,7 +45,7 @@ class CallbackHandlers:
         answer = f"{username.title()}, введите название города латиницей.\n"
         answer += "\U0001F537 Пример: <b>Kharkiv</b>.\n"
         answer += "\U0001F537 Прогноз погоды по местоположению - /location.\n"
-        answer += "\U0001F537 Прогноз на 3 дня - /forecast.\n"
+        answer += "\U0001F537 Прогноз на 5 дней - /forecast.\n"
         answer += "\U0001F537 Информации об авторе - /author.\n"
         
         send_action(self.bot, callback.message.chat.id, 'typing')
