@@ -55,7 +55,7 @@ class CommandHandlers:
         """Handle /forecast command."""
         username = get_username(message)
         keyboard = create_location_keyboard()
-        answer = f"{username.title()}, введите город для получения прогноза на 3 дня или\n"
+        answer = f"{username.title()}, введите город для получения прогноза на 5 дней или\n"
         answer += "нажмите '\U0001F310 location' для отправки местоположения\n"
         
         send_action(self.bot, message.chat.id, 'typing')
@@ -76,7 +76,7 @@ class CommandHandlers:
         # Check for Cyrillic
         if message.text and re.search(r'[\u0400-\u04FF]', message.text):
             answer = f"{username.title()}, пожалуйста введите название города латиницей.\n"
-            answer += "\U0001F537 Прогноз погоды по местоположению - '\U0001F310 location'.\n"
+            answer += "\U0001F537 Прогноз по местоположению - '\U0001F310 location'.\n"
             answer += "\U0001F537 Помощь - help.\n"
             send_action(self.bot, message.chat.id, 'typing')
             time.sleep(1)
@@ -94,7 +94,7 @@ class CommandHandlers:
         if not forecast_data:
             city_name = message.text.capitalize() if message.text else "..."
             answer = f"<b>{city_name}</b> не найден!\n"
-            answer += "\U0001F537 Прогноз погоды по местоположению - '\U0001F310 location'.\n"
+            answer += "\U0001F537 Прогноз по местоположению - '\U0001F310 location'.\n"
             answer += "\U0001F537 Помощь - help.\n"
             send_action(self.bot, message.chat.id, 'typing')
             time.sleep(1)
@@ -120,7 +120,7 @@ class CommandHandlers:
         
         answer = f"{username.title()}, введите название города латиницей.\n"
         answer += "\U0001F537 Пример: <b>Kharkiv</b>.\n"
-        answer += "\U0001F537 Прогноз погоды по местоположению - /location.\n"
+        answer += "\U0001F537 Прогноз по местоположению - /location.\n"
         answer += "\U0001F537 Прогноз на 5 дней - /forecast.\n"
         answer += "\U0001F537 Информации об авторе - /author.\n"
         

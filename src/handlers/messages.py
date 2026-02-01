@@ -36,7 +36,7 @@ class MessageHandlers:
         # Check for Cyrillic
         if message.text and re.search(r'[\u0400-\u04FF]', message.text):
             answer = f"{username.title()}, пожалуйста введите название города латиницей.\n"
-            answer += "\U0001F537 Прогноз погоды по местоположению - /location.\n"
+            answer += "\U0001F537 Прогноз по местоположению - /location.\n"
             answer += "\U0001F537 Прогноз на 5 дней - /forecast.\n"
             answer += "\U0001F537 Помощь - /help.\n"
             send_action(self.bot, message.chat.id, 'typing')
@@ -48,7 +48,7 @@ class MessageHandlers:
         # Check for invalid input
         if message.text == '...':
             answer = f"<b>{message.text.capitalize()}</b> не найден!\n"
-            answer += "\U0001F537 Прогноз погоды по местоположению - /location.\n"
+            answer += "\U0001F537 Прогноз по местоположению - /location.\n"
             answer += "\U0001F537 Прогноз на 5 дней - /forecast.\n"
             answer += "\U0001F537 Помощь - /help.\n"
             send_action(self.bot, message.chat.id, 'typing')
@@ -66,7 +66,7 @@ class MessageHandlers:
         if not weather_data:
             city_name = message.text.capitalize() if message.text else "..."
             answer = f"<b>{city_name}</b> не найден!\n"
-            answer += "\U0001F537 Прогноз погоды по местоположению - /location.\n"
+            answer += "\U0001F537 Прогноз по местоположению - /location.\n"
             answer += "\U0001F537 Прогноз на 5 дней - /forecast.\n"
             answer += "\U0001F537 Помощь - /help.\n"
             send_action(self.bot, message.chat.id, 'typing')

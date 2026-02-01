@@ -44,7 +44,7 @@ class CallbackHandlers:
         
         answer = f"{username.title()}, введите название города латиницей.\n"
         answer += "\U0001F537 Пример: <b>Kharkiv</b>.\n"
-        answer += "\U0001F537 Прогноз погоды по местоположению - /location.\n"
+        answer += "\U0001F537 Прогноз по местоположению - /location.\n"
         answer += "\U0001F537 Прогноз на 5 дней - /forecast.\n"
         answer += "\U0001F537 Информации об авторе - /author.\n"
         
@@ -78,7 +78,7 @@ class CallbackHandlers:
     def _handle_forecast_callback(self, callback: telebot.types.CallbackQuery, username: str) -> None:
         """Handle forecast button callback."""
         keyboard = create_location_keyboard()
-        answer = f"{username.title()}, введите город для получения прогноза на 3 дня или\n"
+        answer = f"{username.title()}, введите город для получения прогноза на 5 дней или\n"
         answer += "нажмите '\U0001F310 location' для отправки местоположения\n"
         
         send_action(self.bot, callback.message.chat.id, 'typing')
@@ -100,7 +100,7 @@ class CallbackHandlers:
         
         answer = f"{username.title()}, введите название города латиницей.\n"
         answer += "\U0001F537 Пример: <b>Kharkiv</b>.\n"
-        answer += "\U0001F537 Прогноз погоды по местоположению - '\U0001F310 location'.\n"
+        answer += "\U0001F537 Прогноз по местоположению - '\U0001F310 location'.\n"
         answer += "\U0001F537 Информации об авторе - author.\n"
         
         send_action(self.bot, callback.message.chat.id, 'typing')

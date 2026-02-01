@@ -188,7 +188,7 @@ class WeatherService:
         for day in forecast_data['forecasts']:
             answer += f"\U0001F539 <i>Дата:</i> \U0001F4C6 <b>{day['date']}</b>\n"
             answer += f"\U0001F539 <i>Статус:</i> {day['icon']} <b>{day['status'].capitalize()}</b>\n"
-            answer += f"\U0001F539 <i>Температура воздуха:</i> \U0001F321 <b>{day['temp_min']} / {day['temp_max']} {DEGREE_SIGN}C</b>\n"
+            answer += f"\U0001F539 <i>Температура воздуха:</i> \U0001F321 <b>{day['temp_min']}...{day['temp_max']} {DEGREE_SIGN}C</b>\n"
             answer += f"\U0001F539 <i>Давление:</i> <b>{day['pressure_avg']} мм</b>\n"
             answer += f"\U0001F539 <i>Влажность:</i> <b>{day['humidity_avg']} %</b>\n"
             answer += f"\U0001F539 <i>Скорость ветра:</i> <b>{day['wind_speed_avg']} м/c</b>\n\n"
