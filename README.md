@@ -1,6 +1,6 @@
 # SKB Weather Bot
 
-Telegram weather bot providing current weather and 3-day forecasts using OpenWeatherMap API.
+Telegram weather bot providing current weather and 5-day forecasts using OpenWeatherMap API.
 
 Bot link: https://telegram.me/skbweatherbot
 
@@ -33,7 +33,7 @@ Bot link: https://telegram.me/skbweatherbot
 ## Features
 
 - Current weather by city name or GPS location
-- 3-day weather forecast
+- 5-day weather forecast
 - Automatic timezone detection
 - Inline keyboard navigation
 - Retry mechanism for API calls
@@ -120,7 +120,7 @@ The deployment script will:
 
 - `/start` - Welcome message and main menu
 - `/location` - Request GPS location for weather
-- `/forecast` - Get 3-day weather forecast
+- `/forecast` - Get 5-day weather forecast
 - `/help` - Usage instructions
 - `/author` - Author information
 
