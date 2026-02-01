@@ -112,10 +112,9 @@ class WeatherService:
             daily_data = defaultdict(list)
 
             for weather_obj in forecast_obj:
-                dt_utc = datetime.datetime.utcfromtimestamp(
-                    weather_obj.get_reference_time()
+                dt_local = datetime.datetime.fromtimestamp(
+                    weather_obj.get_reference_time(), tz=timezone
                 )
-                dt_local = dt_utc + timezone.utcoffset(dt_utc)
                 date_str = dt_local.strftime('%Y-%m-%d')
 
                 daily_data[date_str].append({
@@ -170,12 +169,9 @@ class WeatherService:
     def format_current_weather(username: str, weather_data: dict) -> str:
         """Format current weather data as message."""
         answer = f"{username}, в <b>{weather_data['location_name']}</b>\n\n"
-        
-        if 'timezone' in weather_data and weather_data['timezone']:
-            answer += f"\U0001F539 <i>Часовой пояс:</i> <b>{weather_data['timezone']}</b>\n"
-            answer += f"\U0001F539 <i>Дата:</i> \U0001F4C6 <b>{weather_data['date']}</b>\n"
-            answer += f"\U0001F539 <i>Текущее время:</i> \U0000231A <b>{weather_data['time']}</b>\n"
-        
+        answer += f"\U0001F539 <i>Часовой пояс:</i> <b>{weather_data['timezone']}</b>\n"
+        answer += f"\U0001F539 <i>Дата:</i> \U0001F4C6 <b>{weather_data['date']}</b>\n"
+        answer += f"\U0001F539 <i>Текущее время:</i> \U0000231A <b>{weather_data['time']}</b>\n"
         answer += f"\U0001F539 <i>Статус:</i> {weather_data['icon']} <b>{weather_data['status'].capitalize()}</b>\n"
         answer += f"\U0001F539 <i>Температура воздуха:</i> \U0001F321 <b>{weather_data['temp']} {DEGREE_SIGN}C</b>\n"
         answer += f"\U0001F539 <i>Давление:</i> <b>{weather_data['pressure']} мм</b>\n"
@@ -191,11 +187,11 @@ class WeatherService:
         answer += f"\U0001F539 <i>Часовой пояс:</i> <b>{forecast_data['timezone']}</b>\n\n"
 
         for day in forecast_data['forecasts']:
-            answer += f"\U0001F539 <i>Дата:</i> <b>{day['date']}</b>\n"
+            answer += f"\U0001F539 <i>Дата:</i> \U0001F4C6 <b>{day['date']}</b>\n"
             answer += f"\U0001F539 <i>Статус:</i> {day['icon']} <b>{day['status'].capitalize()}</b>\n"
-            answer += f"\U0001F539 <i>Температура воздуха (мин.):</i> 🌡 <b>{day['temp_min']}°C</b>\n"
-            answer += f"\U0001F539 <i>Температура воздуха (макс.):</i> 🌡 <b>{day['temp_max']}°C</b>\n"
-            answer += f"\U0001F539 <i>Температура воздуха (сред.):</i> 🌡 <b>{day['temp_avg']}°C</b>\n"
+            answer += f"\U0001F539 <i>Температура воздуха (мин.):</i> \U0001F321 <b>{day['temp_min']} {DEGREE_SIGN}C</b>\n"
+            answer += f"\U0001F539 <i>Температура воздуха (макс.):</i> \U0001F321 <b>{day['temp_max']} {DEGREE_SIGN}C</b>\n"
+            answer += f"\U0001F539 <i>Температура воздуха (сред.):</i> \U0001F321 <b>{day['temp_avg']} {DEGREE_SIGN}C</b>\n"
             answer += f"\U0001F539 <i>Давление:</i> <b>{day['pressure_avg']} мм</b>\n"
             answer += f"\U0001F539 <i>Влажность:</i> <b>{day['humidity_avg']} %</b>\n"
             answer += f"\U0001F539 <i>Скорость ветра:</i> <b>{day['wind_speed_avg']} м/c</b>\n\n"
