@@ -4,6 +4,7 @@ import datetime
 import pytz
 import pyowm
 from tzwhere import tzwhere
+from collections import defaultdict, Counter
 from typing import Optional
 import logging
 from config import DEGREE_SIGN
@@ -16,7 +17,7 @@ class WeatherService:
     
     def __init__(self, api_key: str):
         """Initialize weather service with API key."""
-        self.owm = pyowm.OWM(API_key=api_key, language="ru")
+        self.owm = pyowm.OWM(API_key=api_key, language='ru')
         self.tz_finder = tzwhere.tzwhere()
     
     def is_online(self) -> bool:
@@ -37,8 +38,8 @@ class WeatherService:
         return icons.get(icon, '')
     
     def get_current_weather(self, city: Optional[str] = None, 
-                           lat: Optional[float] = None, 
-                           lon: Optional[float] = None) -> Optional[dict]:
+                            lat: Optional[float] = None, 
+                            lon: Optional[float] = None) -> Optional[dict]:
         """Get current weather by city name or coordinates."""
         try:
             if lat is not None and lon is not None:
@@ -51,34 +52,41 @@ class WeatherService:
             location = observation.get_location()
             weather = observation.get_weather()
             timezone_str = self.tz_finder.tzNameAt(location.get_lat(), location.get_lon())
+
+            if timezone_str is None:
+                timezone = pytz.utc
+                timezone_str = 'UTC'
+            else:
+                timezone = pytz.timezone(timezone_str)
             
+            dt = datetime.datetime.utcnow()
+            current_time = dt + timezone.utcoffset(dt)
+
             result = {
                 'location_name': location.get_name(),
                 'icon': self.icon_handler(weather.get_weather_icon_name()),
                 'status': weather.get_detailed_status(),
-                'temp': int(weather.get_temperature('celsius')["temp"]),
+                'temp': int(weather.get_temperature('celsius')['temp']),
                 'pressure': int(float(weather.get_pressure()['press']) * 0.75),
                 'humidity': weather.get_humidity(),
                 'wind_speed': weather.get_wind()['speed'],
-                'timezone': timezone_str
+                'timezone': timezone_str,
+                'date': current_time.strftime('%Y-%m-%d'),
+                'time': current_time.strftime('%H:%M:%S')
             }
-            
-            if timezone_str:
-                timezone = pytz.timezone(timezone_str)
-                dt = datetime.datetime.utcnow()
-                current_time = dt + timezone.utcoffset(dt)
-                result['date'] = str(current_time).split()[0]
-                result['time'] = str(current_time).split()[-1].split('.')[0]
             
             return result
         except Exception as e:
-            logger.error(f"Error fetching current weather: {e}")
+            logger.error(f'Error fetching current weather: {e}')
             return None
     
     def get_forecast(self, city: Optional[str] = None,
-                    lat: Optional[float] = None,
-                    lon: Optional[float] = None) -> Optional[dict]:
-        """Get 3-day weather forecast."""
+                        lat: Optional[float] = None,
+                        lon: Optional[float] = None) -> Optional[dict]:
+        """
+        Get aggregated 5-day weather forecast. 
+        Returns average, min/max, and dominant status per day.
+        """
         try:
             if lat is not None and lon is not None:
                 forecast = self.owm.three_hours_forecast_at_coords(lat, lon)
@@ -86,39 +94,76 @@ class WeatherService:
                 forecast = self.owm.three_hours_forecast(city)
             else:
                 return None
-            
+
             location = forecast.get_forecast().get_location()
-            timezone_str = self.tz_finder.tzNameAt(location.get_lat(), location.get_lon())
-            
-            if not timezone_str:
-                return None
-            
-            timezone = pytz.timezone(timezone_str)
-            dt = datetime.datetime.utcnow()
-            current_time = dt + timezone.utcoffset(dt)
-            
-            forecasts = []
-            for i in range(1, 4):
-                timer = current_time + datetime.timedelta(days=i)
-                forecast_weather = forecast.get_weather_at(timer)
-                
-                forecasts.append({
-                    'date': str(timer).split()[0],
-                    'icon': self.icon_handler(forecast_weather.get_weather_icon_name()),
-                    'status': forecast_weather.get_detailed_status(),
-                    'temp': int(forecast_weather.get_temperature('celsius')["temp"]),
-                    'pressure': int(float(forecast_weather.get_pressure()['press']) * 0.75),
-                    'humidity': forecast_weather.get_humidity(),
-                    'wind_speed': int(forecast_weather.get_wind()['speed'])
+
+            timezone_str = self.tz_finder.tzNameAt(
+                location.get_lat(),
+                location.get_lon()
+            )
+
+            if timezone_str is None:
+                timezone = pytz.utc
+                timezone_str = 'UTC'
+            else:
+                timezone = pytz.timezone(timezone_str)
+
+            forecast_obj = forecast.get_forecast()
+            daily_data = defaultdict(list)
+
+            for weather_obj in forecast_obj:
+                dt_utc = datetime.datetime.utcfromtimestamp(
+                    weather_obj.get_reference_time()
+                )
+                dt_local = dt_utc + timezone.utcoffset(dt_utc)
+                date_str = dt_local.strftime('%Y-%m-%d')
+
+                daily_data[date_str].append({
+                    'temp': weather_obj.get_temperature('celsius')['temp'],
+                    'humidity': weather_obj.get_humidity(),
+                    'pressure': float(weather_obj.get_pressure()['press']) * 0.75,
+                    'wind_speed': weather_obj.get_wind()['speed'],
+                    'status': weather_obj.get_detailed_status(),
+                    'icon': self.icon_handler(
+                        weather_obj.get_weather_icon_name()
+                    )
                 })
-            
+
+            aggregated_forecasts = []
+
+            for date, entries in daily_data.items():
+                temps = [e['temp'] for e in entries]
+                humidity = [e['humidity'] for e in entries]
+                pressure = [e['pressure'] for e in entries]
+                wind_speed = [e['wind_speed'] for e in entries]
+                statuses = [e['status'] for e in entries]
+                icons = [e['icon'] for e in entries]
+
+                dominant_status = Counter(statuses).most_common(1)[0][0]
+                dominant_icon = Counter(icons).most_common(1)[0][0]
+
+                aggregated_forecasts.append({
+                    'date': date,
+                    'temp_min': int(min(temps)),
+                    'temp_max': int(max(temps)),
+                    'temp_avg': int(sum(temps) / len(temps)),
+                    'humidity_avg': int(sum(humidity) / len(humidity)),
+                    'pressure_avg': int(sum(pressure) / len(pressure)),
+                    'wind_speed_avg': int(sum(wind_speed) / len(wind_speed)),
+                    'status': dominant_status,
+                    'icon': dominant_icon
+                })
+
+            aggregated_forecasts.sort(key=lambda x: x['date'])
+
             return {
                 'location_name': location.get_name(),
                 'timezone': timezone_str,
-                'forecasts': forecasts
+                'forecasts': aggregated_forecasts
             }
+
         except Exception as e:
-            logger.error(f"Error fetching forecast: {e}")
+            logger.error(f'Error fetching forecast: {e}')
             return None
     
     @staticmethod
@@ -144,13 +189,15 @@ class WeatherService:
         """Format forecast data as message."""
         answer = f"{username}, в <b>{forecast_data['location_name']}</b>\n"
         answer += f"\U0001F539 <i>Часовой пояс:</i> <b>{forecast_data['timezone']}</b>\n\n"
-        
+
         for day in forecast_data['forecasts']:
-            answer += f"\U0001F539 <i>Дата:</i>\U0001F4C6 <b>{day['date']}</b>\n"
+            answer += f"\U0001F539 <i>Дата:</i> <b>{day['date']}</b>\n"
             answer += f"\U0001F539 <i>Статус:</i> {day['icon']} <b>{day['status'].capitalize()}</b>\n"
-            answer += f"\U0001F539 <i>Температура воздуха:</i> \U0001F321 <b>{day['temp']} {DEGREE_SIGN}C</b>\n"
-            answer += f"\U0001F539 <i>Давление:</i> <b>{day['pressure']} мм</b>\n"
-            answer += f"\U0001F539 <i>Влажность:</i> <b>{day['humidity']} %</b>\n"
-            answer += f"\U0001F539 <i>Скорость ветра:</i> <b>{day['wind_speed']} м/c</b>\n\n"
-        
+            answer += f"\U0001F539 <i>Температура воздуха (мин.):</i> 🌡 <b>{day['temp_min']}°C</b>\n"
+            answer += f"\U0001F539 <i>Температура воздуха (макс.):</i> 🌡 <b>{day['temp_max']}°C</b>\n"
+            answer += f"\U0001F539 <i>Температура воздуха (сред.):</i> 🌡 <b>{day['temp_avg']}°C</b>\n"
+            answer += f"\U0001F539 <i>Давление:</i> <b>{day['pressure_avg']} мм</b>\n"
+            answer += f"\U0001F539 <i>Влажность:</i> <b>{day['humidity_avg']} %</b>\n"
+            answer += f"\U0001F539 <i>Скорость ветра:</i> <b>{day['wind_speed_avg']} м/c</b>\n\n"
+
         return answer
