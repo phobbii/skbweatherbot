@@ -1,30 +1,27 @@
 """Message handlers for the bot."""
-import time
 import re
 import random
 import telebot
-from utils.bot_helpers import (
-    send_action, send_message, send_sticker, get_username,
-    create_inline_keyboard, remove_keyboard, reply_to_message
-)
+from utils.bot_helpers import create_inline_keyboard, remove_keyboard, reply_to_message, send_sticker
 from services.weather_service import WeatherService
-from config import ERROR_STICKERS, WRONG_CONTENT_STICKERS
+from config import WRONG_CONTENT_STICKERS
+from handlers.base import BaseHandler
 
 
-class MessageHandlers:
+class MessageHandlers(BaseHandler):
     """Handlers for bot messages."""
     
     def __init__(self, bot: telebot.TeleBot, weather_service: WeatherService):
         """Initialize handlers with bot and weather service."""
-        self.bot = bot
+        super().__init__(bot)
         self.weather = weather_service
     
     def handle_weather_request(self, message: telebot.types.Message) -> None:
         """Handle weather request by city or location."""
-        username = get_username(message)
+        username = self.get_username(message)
         
         if not self.weather.is_online():
-            self._send_service_unavailable(message, username)
+            self.send_service_unavailable(message.chat.id, username, reply_markup=remove_keyboard())
             return
         
         keyboard = create_inline_keyboard(
@@ -35,26 +32,12 @@ class MessageHandlers:
         
         # Check for Cyrillic
         if message.text and re.search(r'[\u0400-\u04FF]', message.text):
-            answer = f"{username.title()}, пожалуйста введите название города латиницей.\n"
-            answer += "\U0001F537 Прогноз по местоположению - /location.\n"
-            answer += "\U0001F537 Прогноз на 5 дней - /forecast.\n"
-            answer += "\U0001F537 Помощь - /help.\n"
-            send_action(self.bot, message.chat.id, 'typing')
-            time.sleep(1)
-            send_message(self.bot, message.chat.id, answer, reply_markup=keyboard)
-            send_sticker(self.bot, message.chat.id, 'CAADAgADewIAAvnkbAABeDnKq9BHIbAWBA')
+            self.send_cyrillic_error(message.chat.id, username, keyboard)
             return
         
         # Check for invalid input
         if message.text == '...':
-            answer = f"<b>{message.text.capitalize()}</b> не найден!\n"
-            answer += "\U0001F537 Прогноз по местоположению - /location.\n"
-            answer += "\U0001F537 Прогноз на 5 дней - /forecast.\n"
-            answer += "\U0001F537 Помощь - /help.\n"
-            send_action(self.bot, message.chat.id, 'typing')
-            time.sleep(1)
-            send_message(self.bot, message.chat.id, answer, reply_markup=keyboard, parse_mode='HTML')
-            send_sticker(self.bot, message.chat.id, 'CAADAgADegIAAvnkbAABGyiSVUu1QfIWBA')
+            self.send_city_not_found(message.chat.id, message.text.capitalize(), keyboard)
             return
         
         # Get weather
@@ -65,31 +48,13 @@ class MessageHandlers:
         
         if not weather_data:
             city_name = message.text.capitalize() if message.text else "..."
-            answer = f"<b>{city_name}</b> не найден!\n"
-            answer += "\U0001F537 Прогноз по местоположению - /location.\n"
-            answer += "\U0001F537 Прогноз на 5 дней - /forecast.\n"
-            answer += "\U0001F537 Помощь - /help.\n"
-            send_action(self.bot, message.chat.id, 'typing')
-            time.sleep(1)
-            send_message(self.bot, message.chat.id, answer, reply_markup=keyboard, parse_mode='HTML')
-            send_sticker(self.bot, message.chat.id, 'CAADAgADegIAAvnkbAABGyiSVUu1QfIWBA')
+            self.send_city_not_found(message.chat.id, city_name, keyboard)
             return
         
         answer = self.weather.format_current_weather(username.title(), weather_data)
-        send_action(self.bot, message.chat.id, 'typing')
-        time.sleep(1)
         reply_to_message(self.bot, message, answer, reply_markup=remove_keyboard(), parse_mode='HTML')
     
     def handle_wrong_content(self, message: telebot.types.Message) -> None:
         """Handle unsupported content types."""
         send_sticker(self.bot, message.chat.id, random.choice(WRONG_CONTENT_STICKERS),
                     reply_to_message_id=message.message_id, reply_markup=remove_keyboard())
-    
-    def _send_service_unavailable(self, message: telebot.types.Message, username: str) -> None:
-        """Send service unavailable message."""
-        answer = f"{username}, прошу прощения, в данный момент сервис погоды не доступен!\n"
-        answer += "Попробуйте позже\n"
-        send_action(self.bot, message.chat.id, 'typing')
-        time.sleep(1)
-        send_message(self.bot, message.chat.id, answer, reply_markup=remove_keyboard())
-        send_sticker(self.bot, message.chat.id, random.choice(ERROR_STICKERS))

@@ -19,6 +19,8 @@ Bot link: https://telegram.me/skbweatherbot
     ├── config.py                   # Configuration and environment variables
     ├── handlers/                   # Message and command handlers
     │   ├── __init__.py
+    │   ├── base.py                # Base handler with common functionality
+    │   ├── shared.py              # Shared response handlers (help, author)
     │   ├── commands.py            # Command handlers (/start, /help, etc.)
     │   ├── messages.py            # Message handlers (weather requests)
     │   └── callbacks.py           # Inline button callback handlers
@@ -129,11 +131,13 @@ The deployment script will:
 ### Modular Design
 - **Separation of concerns**: handlers, services, utilities, and configuration are isolated
 - **Single responsibility**: each module has a clear, focused purpose
+- **Inheritance hierarchy**: base classes eliminate code duplication
 - **Easy to extend**: add new commands or services without touching existing code
 
 ### Code Quality
 - **Type hints**: all functions have type annotations
 - **Docstrings**: comprehensive documentation
+- **DRY principle**: shared functionality in base classes
 - **Logging**: proper logging 
 
 ### Error Handling
