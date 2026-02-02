@@ -132,7 +132,7 @@ substitutions:
     _INSTANCE_LABELS             : scheduled=true
     _INSTANCE_NETWORK_TAGS       : weatherbot
     _INSTANCE_MAINTANANCE_POLICY : MIGRATE
-    _INSTANCE_DISK_SIZE          : "30"
+    _INSTANCE_DISK_SIZE          : "10"
     _NETWORK_TIER                : PREMIUM
     _SM_OWM_KEY_SECRET_NAME      : WEATHERBOT_OWM_KEY
     _SM_TELEBOT_KEY_SECRET_NAME  : WEATHERBOT_TELEGRAM_KEY
