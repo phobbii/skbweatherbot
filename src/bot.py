@@ -76,12 +76,13 @@ def callback_query(callback: telebot.types.CallbackQuery) -> None:
     callback_handlers.handle_callback(callback)
 
 
-@bot.message_handler(func=lambda m: True, content_types=config.CONTENT_TO_HANDLE)
+@bot.message_handler(content_types=config.CONTENT_TO_HANDLE)
 def weather_message(message: telebot.types.Message) -> None:
     msg_handlers.handle_weather_request(message)
 
 
-@bot.message_handler(func=lambda m: True)
+@bot.message_handler(content_types=['audio', 'document', 'photo', 'sticker', 'video', 'video_note', 
+                                     'voice', 'contact', 'venue', 'poll', 'dice', 'game', 'invoice'])
 def wrong_content_message(message: telebot.types.Message) -> None:
     msg_handlers.handle_wrong_content(message)
 
