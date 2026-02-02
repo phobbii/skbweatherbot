@@ -81,7 +81,7 @@ def weather_message(message: telebot.types.Message) -> None:
     msg_handlers.handle_weather_request(message)
 
 
-@bot.message_handler(func=lambda m: True, content_types=config.CONTENT_TO_REJECT)
+@bot.message_handler(func=lambda m: True)
 def wrong_content_message(message: telebot.types.Message) -> None:
     msg_handlers.handle_wrong_content(message)
 

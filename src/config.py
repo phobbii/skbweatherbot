@@ -62,13 +62,6 @@ WEBHOOK_URL_PATH = f"/{TELEBOT_KEY}/"
 
 # Content types
 CONTENT_TO_HANDLE = ['text', 'location']
-CONTENT_TO_REJECT = [
-    'audio', 'document', 'photo', 'sticker', 'video', 'video_note', 'voice',
-    'location', 'contact', 'new_chat_members', 'left_chat_member',
-    'new_chat_title', 'new_chat_photo', 'delete_chat_photo',
-    'group_chat_created', 'supergroup_chat_created', 'channel_chat_created',
-    'migrate_to_chat_id', 'migrate_from_chat_id', 'pinned_message'
-]
 
 # Sticker collections
 ERROR_STICKERS = [
