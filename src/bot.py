@@ -26,7 +26,7 @@ weather_service = WeatherService(config.OWM_KEY)
 # Initialize handlers
 cmd_handlers = CommandHandlers(bot, weather_service)
 msg_handlers = MessageHandlers(bot, weather_service)
-callback_handlers = CallbackHandlers(bot)
+callback_handlers = CallbackHandlers(bot, cmd_handlers)
 
 # Setup aiohttp app
 app = web.Application()

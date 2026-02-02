@@ -43,13 +43,26 @@ src/bot.py
 ├── src/services/weather_service.py
 │   └── src/config.py
 ├── src/handlers/commands.py
+│   ├── src/handlers/base.py
+│   ├── src/handlers/shared.py
 │   ├── src/services/weather_service.py
 │   └── src/utils/bot_helpers.py
 ├── src/handlers/messages.py
+│   ├── src/handlers/base.py
 │   ├── src/services/weather_service.py
 │   └── src/utils/bot_helpers.py
 └── src/handlers/callbacks.py
+    ├── src/handlers/base.py
+    ├── src/handlers/shared.py
     └── src/utils/bot_helpers.py
+
+src/handlers/shared.py
+├── src/handlers/base.py
+└── src/utils/bot_helpers.py
+
+src/handlers/base.py
+├── src/utils/bot_helpers.py
+└── src/config.py
 
 src/utils/bot_helpers.py
 └── (no dependencies - pure utilities)
@@ -78,22 +91,39 @@ src/config.py
 ├──────────────┤  ├──────────────┤  ├──────────────┤
 │+ owm         │  │+ bot         │  │+ bot         │
 │+ tz_finder   │  │+ weather     │  │+ weather     │
-├──────────────┤  ├──────────────┤  ├──────────────┤
-│+ is_online() │  │+ handle_start│  │+ handle_     │
-│+ get_current │  │+ handle_help │  │  weather_req │
-│+ get_forecast│  │+ handle_     │  │+ handle_wrong│
-│+ format_*()  │  │  forecast    │  │  _content    │
-└──────────────┘  └──────────────┘  └──────────────┘
-                          │
-                          ↓
-                  ┌──────────────┐
-                  │CallbackHandlers│
-                  ├──────────────┤
-                  │+ bot         │
-                  ├──────────────┤
-                  │+ handle_     │
-                  │  callback    │
-                  └──────────────┘
+├──────────────┤  │+ shared      │  ├──────────────┤
+│+ is_online() │  ├──────────────┤  │+ handle_     │
+│+ get_current │  │+ handle_start│  │  weather_req │
+│+ get_forecast│  │+ handle_help │  │+ handle_wrong│
+│+ format_*()  │  │+ handle_     │  │  _content    │
+└──────────────┘  │  forecast    │  └──────────────┘
+                  └──────────────┘          │
+                          │                 │
+                          ↓                 ↓
+                  ┌──────────────┐  ┌──────────────┐
+                  │CallbackHandlers│ │  BaseHandler │
+                  ├──────────────┤  ├──────────────┤
+                  │+ bot         │  │+ bot         │
+                  │+ cmd_handlers│  ├──────────────┤
+                  │+ shared      │  │+ send_response│
+                  ├──────────────┤  │+ send_service│
+                  │+ handle_     │  │  _unavailable│
+                  │  callback    │  │+ send_city_  │
+                  └──────────────┘  │  not_found   │
+                          ↑         │+ send_cyrillic│
+                          │         │  _error      │
+                          │         └──────────────┘
+                          │                 ↑
+                          └─────────────────┤
+                                            │
+                                    ┌──────────────┐
+                                    │SharedResponses│
+                                    ├──────────────┤
+                                    │+ bot         │
+                                    ├──────────────┤
+                                    │+ send_help   │
+                                    │+ send_author │
+                                    └──────────────┘
 ```
 
 ## Request Flow Examples
@@ -192,9 +222,11 @@ Start bot
 ## Key Design Patterns Used
 
 1. **Separation of Concerns**: Each module has single responsibility
-2. **Dependency Injection**: Services passed to handlers
-3. **Factory Pattern**: Keyboard creation functions
-4. **Retry Pattern**: Generic retry wrapper
-5. **Template Method**: Format methods in WeatherService
-6. **Strategy Pattern**: Different handlers for different message types
-7. **Facade Pattern**: bot_helpers simplifies complex operations
+2. **Inheritance**: BaseHandler provides common functionality to all handlers
+3. **Composition**: SharedResponses reused across command and callback handlers
+4. **Dependency Injection**: Services and handlers passed to constructors
+5. **Factory Pattern**: Keyboard creation functions
+6. **Retry Pattern**: Generic retry wrapper
+7. **Template Method**: Format methods in WeatherService
+8. **Strategy Pattern**: Different handlers for different message types
+9. **Facade Pattern**: bot_helpers simplifies complex operations

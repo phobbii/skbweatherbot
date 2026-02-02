@@ -1,25 +1,25 @@
 """Callback query handlers for inline buttons."""
-import time
 import telebot
-from utils.bot_helpers import (
-    send_action, send_message, send_sticker, get_username,
-    create_inline_keyboard, create_location_keyboard
-)
+from utils.bot_helpers import create_inline_keyboard, create_location_keyboard
+from handlers.base import BaseHandler
+from handlers.shared import SharedResponses
 
 
-class CallbackHandlers:
+class CallbackHandlers(BaseHandler):
     """Handlers for inline button callbacks."""
     
-    def __init__(self, bot: telebot.TeleBot):
-        """Initialize handlers with bot."""
-        self.bot = bot
+    def __init__(self, bot: telebot.TeleBot, command_handlers):
+        """Initialize handlers with bot and command handlers."""
+        super().__init__(bot)
+        self.command_handlers = command_handlers
+        self.shared = SharedResponses(bot)
     
     def handle_callback(self, callback: telebot.types.CallbackQuery) -> None:
         """Handle all callback queries."""
         if not callback.message:
             return
         
-        username = get_username(callback)
+        username = self.get_username(callback)
         
         handlers = {
             'help': self._handle_help_callback,
@@ -36,86 +36,40 @@ class CallbackHandlers:
     
     def _handle_help_callback(self, callback: telebot.types.CallbackQuery, username: str) -> None:
         """Handle help button callback."""
-        keyboard = create_inline_keyboard(
-            ("location", "location"),
-            ("forecast", "forecast"),
-            ("author", "author")
-        )
-        
-        answer = f"{username.title()}, введите название города латиницей.\n"
-        answer += "\U0001F537 Пример: <b>Kharkiv</b>.\n"
-        answer += "\U0001F537 Прогноз по местоположению - /location.\n"
-        answer += "\U0001F537 Прогноз на 5 дней - /forecast.\n"
-        answer += "\U0001F537 Информации об авторе - /author.\n"
-        
-        send_action(self.bot, callback.message.chat.id, 'typing')
-        time.sleep(1)
-        send_message(self.bot, callback.message.chat.id, answer, reply_markup=keyboard, parse_mode='HTML')
-        send_sticker(self.bot, callback.message.chat.id, 'CAADAgADxwIAAvnkbAABx601cOaIcf8WBA')
+        self.shared.send_help(callback.message.chat.id, username)
     
     def _handle_author_callback(self, callback: telebot.types.CallbackQuery, username: str) -> None:
         """Handle author button callback."""
-        answer = "\U0001F537 Author: <b>Yevhen Skyba</b>\n"
-        answer += "\U0001F537 Email: skiba.eugene@gmail.com\n"
-        answer += "\U0001F537 LinkedIn: https://www.linkedin.com/in/yevhen-skyba/\n"
-        answer += "\U0001F537 Telegram: @phobbii"
-        
-        send_action(self.bot, callback.message.chat.id, 'typing')
-        time.sleep(1)
-        from utils.bot_helpers import remove_keyboard
-        send_message(self.bot, callback.message.chat.id, answer, reply_markup=remove_keyboard(), parse_mode='HTML')
-        send_sticker(self.bot, callback.message.chat.id, 'CAADAgADtQEAAvnkbAABxHAP4NXF1FcWBA')
+        self.shared.send_author(callback.message.chat.id)
     
     def _handle_location_callback(self, callback: telebot.types.CallbackQuery, username: str) -> None:
         """Handle location button callback."""
         keyboard = create_location_keyboard()
-        answer = f"{username.title()}, нажмите на кнопку '\U0001F310 location' для отправки местоположения\n"
-        
-        send_action(self.bot, callback.message.chat.id, 'typing')
-        time.sleep(1)
-        send_message(self.bot, callback.message.chat.id, answer, reply_markup=keyboard)
+        text = f"{username.title()}, нажмите на кнопку '\U0001F310 location' для отправки местоположения\n"
+        self.send_response(callback.message.chat.id, text, reply_markup=keyboard)
     
     def _handle_forecast_callback(self, callback: telebot.types.CallbackQuery, username: str) -> None:
         """Handle forecast button callback."""
         keyboard = create_location_keyboard()
-        answer = f"{username.title()}, введите город для получения прогноза на 5 дней или\n"
-        answer += "нажмите '\U0001F310 location' для отправки местоположения\n"
-        
-        send_action(self.bot, callback.message.chat.id, 'typing')
-        time.sleep(1)
-        send_message(self.bot, callback.message.chat.id, answer, reply_markup=keyboard)
-        
-        # Import here to avoid circular dependency
-        from handlers.commands import CommandHandlers
-        from services.weather_service import WeatherService
-        from config import OWM_KEY
-        
-        weather_service = WeatherService(OWM_KEY)
-        cmd_handlers = CommandHandlers(self.bot, weather_service)
-        self.bot.register_next_step_handler(callback.message, cmd_handlers.handle_forecast_input)
+        text = f"{username.title()}, введите город для получения прогноза на 5 дней или\n"
+        text += "нажмите '\U0001F310 location' для отправки местоположения\n"
+        self.send_response(callback.message.chat.id, text, reply_markup=keyboard)
+        self.bot.register_next_step_handler(callback.message, self.command_handlers.handle_forecast_input)
     
     def _handle_forecast_help_callback(self, callback: telebot.types.CallbackQuery, username: str) -> None:
         """Handle forecast help button callback."""
         keyboard = create_inline_keyboard(("author", "forecast_author"), row_width=1)
-        
-        answer = f"{username.title()}, введите название города латиницей.\n"
-        answer += "\U0001F537 Пример: <b>Kharkiv</b>.\n"
-        answer += "\U0001F537 Прогноз по местоположению - '\U0001F310 location'.\n"
-        answer += "\U0001F537 Информации об авторе - author.\n"
-        
-        send_action(self.bot, callback.message.chat.id, 'typing')
-        time.sleep(1)
-        send_message(self.bot, callback.message.chat.id, answer, reply_markup=keyboard, parse_mode='HTML')
-        send_sticker(self.bot, callback.message.chat.id, 'CAADAgADxwIAAvnkbAABx601cOaIcf8WBA')
+        text = f"{username.title()}, введите название города латиницей.\n"
+        text += "\U0001F537 Пример: <b>Kharkiv</b>.\n"
+        text += "\U0001F537 Прогноз по местоположению - '\U0001F310 location'.\n"
+        text += "\U0001F537 Информации об авторе - author.\n"
+        self.send_response(callback.message.chat.id, text, 'CAADAgADxwIAAvnkbAABx601cOaIcf8WBA', 
+                          reply_markup=keyboard, parse_mode='HTML')
     
     def _handle_forecast_author_callback(self, callback: telebot.types.CallbackQuery, username: str) -> None:
         """Handle forecast author button callback."""
-        answer = "\U0001F537 Author: <b>Yevhen Skyba</b>\n"
-        answer += "\U0001F537 Email: skiba.eugene@gmail.com\n"
-        answer += "\U0001F537 LinkedIn: https://www.linkedin.com/in/yevhen-skyba/\n"
-        answer += "\U0001F537 Telegram: @phobbii"
-        
-        send_action(self.bot, callback.message.chat.id, 'typing')
-        time.sleep(1)
-        send_message(self.bot, callback.message.chat.id, answer, parse_mode='HTML')
-        send_sticker(self.bot, callback.message.chat.id, 'CAADAgADtQEAAvnkbAABxHAP4NXF1FcWBA')
+        text = "\U0001F537 Author: <b>Yevhen Skyba</b>\n"
+        text += "\U0001F537 Email: skiba.eugene@gmail.com\n"
+        text += "\U0001F537 LinkedIn: https://www.linkedin.com/in/yevhen-skyba/\n"
+        text += "\U0001F537 Telegram: @phobbii"
+        self.send_response(callback.message.chat.id, text, 'CAADAgADtQEAAvnkbAABxHAP4NXF1FcWBA', parse_mode='HTML')
