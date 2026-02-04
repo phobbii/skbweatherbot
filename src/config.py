@@ -112,3 +112,6 @@ WRONG_CONTENT_STICKERS = [
 
 # Unicode symbols
 DEGREE_SIGN = '\N{DEGREE SIGN}'
+
+# Locale setting
+LOCALE = 'ru'

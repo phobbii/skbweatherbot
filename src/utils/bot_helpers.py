@@ -4,6 +4,8 @@ import logging
 from typing import Any, Optional
 import telebot
 import emoji
+from datetime import date
+from babel.dates import format_date
 
 logger = logging.getLogger(__name__)
 
@@ -92,3 +94,9 @@ def is_emoji(text: str) -> bool:
     if not text:
         return False
     return bool(emoji.emoji_list(text))
+
+
+def format_localized_weekday(date: date, locale: str) -> str:
+    """Return a localized full weekday and date string, mapping 'ua' to 'uk' for babel."""
+    local_locale = 'uk' if locale.lower() == 'ua' else locale.lower()
+    return format_date(date, 'EEEE, d MMMM y', locale=local_locale)

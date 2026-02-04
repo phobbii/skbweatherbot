@@ -7,7 +7,8 @@ from tzwhere import tzwhere
 from collections import defaultdict, Counter
 from typing import Optional
 import logging
-from config import DEGREE_SIGN
+from config import DEGREE_SIGN, LOCALE
+from utils.bot_helpers import format_localized_weekday
 
 logger = logging.getLogger(__name__)
 
@@ -37,10 +38,13 @@ class WeatherService:
         }
         return icons.get(icon, '')
     
-    def get_current_weather(self, city: Optional[str] = None, 
-                            lat: Optional[float] = None, 
-                            lon: Optional[float] = None) -> Optional[dict]:
-        """Get current weather by city name or coordinates."""
+    def get_current_weather(
+        self,
+        city: Optional[str] = None,
+        lat: Optional[float] = None,
+        lon: Optional[float] = None
+    ) -> Optional[dict]:
+
         try:
             if lat is not None and lon is not None:
                 observation = self.owm.weather_at_coords(lat, lon)
@@ -48,45 +52,48 @@ class WeatherService:
                 observation = self.owm.weather_at_place(city)
             else:
                 return None
-            
+
             location = observation.get_location()
             weather = observation.get_weather()
-            timezone_str = self.tz_finder.tzNameAt(location.get_lat(), location.get_lon())
 
-            if timezone_str is None:
-                timezone = pytz.utc
-                timezone_str = 'UTC'
-            else:
-                timezone = pytz.timezone(timezone_str)
-            
-            dt = datetime.datetime.utcnow()
-            current_time = dt + timezone.utcoffset(dt)
+            timezone_str = self.tz_finder.tzNameAt(
+                location.get_lat(),
+                location.get_lon()
+            )
 
-            result = {
+            timezone = pytz.timezone(timezone_str) if timezone_str else pytz.utc
+            timezone_str = timezone_str or 'UTC'
+
+            utc_now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
+            local_time = utc_now.astimezone(timezone)
+
+            day = local_time.date()
+            formatted_date = format_localized_weekday(day, LOCALE)
+
+            return {
                 'location_name': location.get_name(),
                 'icon': self.icon_handler(weather.get_weather_icon_name()),
                 'status': weather.get_detailed_status(),
-                'temp': int(weather.get_temperature('celsius')['temp']),
-                'pressure': int(float(weather.get_pressure()['press']) * 0.75),
+                'temp': round(weather.get_temperature('celsius')['temp']),
+                'pressure': round(weather.get_pressure()['press'] * 0.75),
                 'humidity': weather.get_humidity(),
-                'wind_speed': weather.get_wind()['speed'],
+                'wind_speed': round(weather.get_wind()['speed']),
                 'timezone': timezone_str,
-                'date': current_time.strftime('%Y-%m-%d'),
-                'time': current_time.strftime('%H:%M:%S')
+                'date': formatted_date.capitalize(),
+                'time': local_time.strftime('%H:%M:%S')
             }
-            
-            return result
+
         except Exception as e:
             logger.error(f'Error fetching current weather: {e}')
             return None
     
-    def get_forecast(self, city: Optional[str] = None,
-                        lat: Optional[float] = None,
-                        lon: Optional[float] = None) -> Optional[dict]:
-        """
-        Get aggregated 5-day weather forecast. 
-        Returns average, min/max, and dominant status per day.
-        """
+    def get_forecast(
+        self,
+        city: Optional[str] = None,
+        lat: Optional[float] = None,
+        lon: Optional[float] = None
+    ) -> Optional[dict]:
+
         try:
             if lat is not None and lon is not None:
                 forecast = self.owm.three_hours_forecast_at_coords(lat, lon)
@@ -102,25 +109,23 @@ class WeatherService:
                 location.get_lon()
             )
 
-            if timezone_str is None:
-                timezone = pytz.utc
-                timezone_str = 'UTC'
-            else:
-                timezone = pytz.timezone(timezone_str)
+            timezone = pytz.timezone(timezone_str) if timezone_str else pytz.utc
+            timezone_str = timezone_str or 'UTC'
 
-            forecast_obj = forecast.get_forecast()
             daily_data = defaultdict(list)
 
-            for weather_obj in forecast_obj:
+            for weather_obj in forecast.get_forecast():
                 dt_local = datetime.datetime.fromtimestamp(
-                    weather_obj.get_reference_time(), tz=timezone
+                    weather_obj.get_reference_time(),
+                    tz=timezone
                 )
-                date_str = dt_local.strftime('%Y-%m-%d')
 
-                daily_data[date_str].append({
+                day = dt_local.date()
+
+                daily_data[day].append({
                     'temp': weather_obj.get_temperature('celsius')['temp'],
                     'humidity': weather_obj.get_humidity(),
-                    'pressure': float(weather_obj.get_pressure()['press']) * 0.75,
+                    'pressure': weather_obj.get_pressure()['press'] * 0.75,
                     'wind_speed': weather_obj.get_wind()['speed'],
                     'status': weather_obj.get_detailed_status(),
                     'icon': self.icon_handler(
@@ -128,36 +133,34 @@ class WeatherService:
                     )
                 })
 
-            aggregated_forecasts = []
+            forecasts = []
 
-            for date, entries in daily_data.items():
+            for day, entries in sorted(daily_data.items()):
+                formatted_date = format_localized_weekday(day, LOCALE)
+
                 temps = [e['temp'] for e in entries]
                 humidity = [e['humidity'] for e in entries]
                 pressure = [e['pressure'] for e in entries]
                 wind_speed = [e['wind_speed'] for e in entries]
+
                 statuses = [e['status'] for e in entries]
                 icons = [e['icon'] for e in entries]
 
-                dominant_status = Counter(statuses).most_common(1)[0][0]
-                dominant_icon = Counter(icons).most_common(1)[0][0]
-
-                aggregated_forecasts.append({
-                    'date': date,
-                    'temp_min': int(min(temps)),
-                    'temp_max': int(max(temps)),
-                    'humidity_avg': int(sum(humidity) / len(humidity)),
-                    'pressure_avg': int(sum(pressure) / len(pressure)),
-                    'wind_speed_avg': int(sum(wind_speed) / len(wind_speed)),
-                    'status': dominant_status,
-                    'icon': dominant_icon
+                forecasts.append({
+                    'date': formatted_date.capitalize(),
+                    'temp_min': round(min(temps)),
+                    'temp_max': round(max(temps)),
+                    'humidity_avg': round(sum(humidity) / len(humidity)),
+                    'pressure_avg': round(sum(pressure) / len(pressure)),
+                    'wind_speed_avg': round(sum(wind_speed) / len(wind_speed)),
+                    'status': Counter(statuses).most_common(1)[0][0],
+                    'icon': Counter(icons).most_common(1)[0][0]
                 })
-
-            aggregated_forecasts.sort(key=lambda x: x['date'])
 
             return {
                 'location_name': location.get_name(),
                 'timezone': timezone_str,
-                'forecasts': aggregated_forecasts
+                'forecasts': forecasts
             }
 
         except Exception as e:
@@ -168,14 +171,14 @@ class WeatherService:
     def format_current_weather(username: str, weather_data: dict) -> str:
         """Format current weather data as message."""
         answer = f"{username}, в <b>{weather_data['location_name']}</b>\n\n"
-        answer += f"\U0001F539 <i>Часовой пояс:</i> <b>{weather_data['timezone']}</b>\n"
-        answer += f"\U0001F539 <i>Дата:</i> \U0001F4C6 <b>{weather_data['date']}</b>\n"
-        answer += f"\U0001F539 <i>Текущее время:</i> \U0000231A <b>{weather_data['time']}</b>\n"
-        answer += f"\U0001F539 <i>Статус:</i> {weather_data['icon']} <b>{weather_data['status'].capitalize()}</b>\n"
-        answer += f"\U0001F539 <i>Температура воздуха:</i> \U0001F321 <b>{weather_data['temp']} {DEGREE_SIGN}C</b>\n"
-        answer += f"\U0001F539 <i>Давление:</i> <b>{weather_data['pressure']} мм</b>\n"
-        answer += f"\U0001F539 <i>Влажность:</i> <b>{weather_data['humidity']} %</b>\n"
-        answer += f"\U0001F539 <i>Скорость ветра:</i> <b>{weather_data['wind_speed']} м/c</b>\n\n"
+        answer += f"\U0001F30D <i>Часовой пояс:</i> <b>{weather_data['timezone']}</b>\n"
+        answer += f"\U0001F4C5 <i>Дата:</i> <b>{weather_data['date']}</b>\n"
+        answer += f"\U000023F0 <i>Текущее время:</i> <b>{weather_data['time']}</b>\n"
+        answer += f"{weather_data['icon']} <i>Статус:</i> <b>{weather_data['status'].capitalize()}</b>\n"
+        answer += f"\U0001F321 <i>Температура воздуха:</i> <b>{weather_data['temp']} {DEGREE_SIGN}C</b>\n"
+        answer += f"\U0001F4CF <i>Давление:</i> <b>{weather_data['pressure']} мм</b>\n"
+        answer += f"\U0001F4A7 <i>Влажность:</i> <b>{weather_data['humidity']} %</b>\n"
+        answer += f"\U0001F4A8 <i>Скорость ветра:</i> <b>{weather_data['wind_speed']} м/c</b>\n\n"
         
         return answer
     
@@ -183,14 +186,21 @@ class WeatherService:
     def format_forecast(username: str, forecast_data: dict) -> str:
         """Format forecast data as message."""
         answer = f"{username}, в <b>{forecast_data['location_name']}</b>\n"
-        answer += f"\U0001F539 <i>Часовой пояс:</i> <b>{forecast_data['timezone']}</b>\n\n"
+        answer += f"\U0001F30D <i>Часовой пояс:</i> <b>{forecast_data['timezone']}</b>\n\n"
 
         for day in forecast_data['forecasts']:
-            answer += f"\U0001F539 <i>Дата:</i> \U0001F4C6 <b>{day['date']}</b>\n"
-            answer += f"\U0001F539 <i>Статус:</i> {day['icon']} <b>{day['status'].capitalize()}</b>\n"
-            answer += f"\U0001F539 <i>Температура воздуха:</i> \U0001F321 <b>{day['temp_min']}...{day['temp_max']} {DEGREE_SIGN}C</b>\n"
-            answer += f"\U0001F539 <i>Давление:</i> <b>{day['pressure_avg']} мм</b>\n"
-            answer += f"\U0001F539 <i>Влажность:</i> <b>{day['humidity_avg']} %</b>\n"
-            answer += f"\U0001F539 <i>Скорость ветра:</i> <b>{day['wind_speed_avg']} м/c</b>\n\n"
+            if day['temp_min'] == day['temp_max']:
+                temp_label = 'Средняя температура воздуха'
+                temp_str = day['temp_min']
+            else:
+                temp_label = 'Температура воздуха'
+                temp_str = f"{day['temp_min']}...{day['temp_max']}"
+
+            answer += f"\U0001F4C5 <i>Дата:</i> <b>{day['date']}</b>\n"
+            answer += f"{day['icon']} <i>Статус:</i> <b>{day['status'].capitalize()}</b>\n"
+            answer += f"\U0001F321 <i>{temp_label}:</i> <b>{temp_str} {DEGREE_SIGN}C</b>\n"
+            answer += f"\U0001F4CF <i>Давление:</i> <b>{day['pressure_avg']} мм</b>\n"
+            answer += f"\U0001F4A7 <i>Влажность:</i> <b>{day['humidity_avg']} %</b>\n"
+            answer += f"\U0001F4A8 <i>Скорость ветра:</i> <b>{day['wind_speed_avg']} м/c</b>\n\n"
 
         return answer
