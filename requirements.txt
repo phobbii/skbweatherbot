@@ -19,3 +19,4 @@ urllib3>=2.6.3
 yarl>=1.18.3
 zope.interface>=7.2
 emoji==2.15.0
+gloser==1.1.0
