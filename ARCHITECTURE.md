@@ -206,7 +206,9 @@ get_env_or_exit("OWM_KEY")
      ↓
 get_env_or_exit("TELEBOT_KEY")
      ↓
-get_webhook_host() → Try IP services
+get_env_or_exit("WEBHOOK_HOST")
+     ↓
+get_env_or_exit("WEBHOOK_PORT")
      ↓
 find_ssl_files() → Scan directory
      ↓

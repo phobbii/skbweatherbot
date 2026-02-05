@@ -103,10 +103,10 @@ def main() -> None:
     context.load_cert_chain(config.WEBHOOK_SSL_CERT, config.WEBHOOK_SSL_PRIV)
     
     # Start server
-    logger.info(f"Starting server on {config.WEBHOOK_LISTEN}:{config.WEBHOOK_PORT}")
+    logger.info(f"Starting server on {config.WEBHOOK_LISTENER}:{config.WEBHOOK_PORT}")
     web.run_app(
         app,
-        host=config.WEBHOOK_LISTEN,
+        host=config.WEBHOOK_LISTENER,
         port=int(config.WEBHOOK_PORT),
         ssl_context=context
     )
