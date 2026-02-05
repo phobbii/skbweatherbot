@@ -66,7 +66,7 @@ Set the following environment variables before running:
 export OWM_KEY="your_openweathermap_api_key"
 export TELEBOT_KEY="your_telegram_bot_token"
 export WEBHOOK_PORT="listener_preferred_port"
-export WEBHOOK_LISTEN="your_public_ip"
+export WEBHOOK_LISTENER="your_public_ip"
 ```
 
 ## Running the Bot
@@ -87,10 +87,7 @@ openssl req -newkey rsa:2048 -sha256 -nodes \
     -keyout ${BOT_HOME}/url_private.key \
     -x509 -days 3650 \
     -out ${BOT_HOME}/url_certificate.pem \
-    -subj "/C=US/ST=State/O=Organization/CN=${WEBHOOK_HOST}" \
-    && curl -s -F "url=https://${WEBHOOK_HOST}:${WEBHOOK_PORT}" \
-    -F "certificate=@url_certificate.pem" \
-    https://api.telegram.org/bot${TELEBOT_KEY}/setWebhook
+    -subj "/C=US/ST=State/O=Organization/CN=${WEBHOOK_HOST}"
 ```
 
 4. Run the bot:
@@ -108,15 +105,14 @@ The bot will:
 1. Ensure Docker is installed (version >= 17.05)
 2. Run the deployment script:
 ```bash
-./deploy_container.sh --owm YOUR_KEY --telegram YOUR_TOKEN --port 8443
+./deploy_container.sh --owm YOUR_KEY --telegram YOUR_TOKEN --public_ip YOUR_PUBLIC_IP --port PORT
 ```
 
 The deployment script will:
-1. Detect your public IP automatically
-2. Build a Docker image with all dependencies
-3. Generate SSL certificates
-4. Configure the webhook
-5. Start the container with auto-restart enabled
+1. Build a Docker image with all dependencies
+2. Generate SSL certificates
+3. Configure the webhook
+4. Start the container with auto-restart enabled
 
 ## Bot Commands
 

@@ -16,10 +16,11 @@ Instance must have a public IP and open HTTPS port.
 Required options:
   --owm          STR     OpenWeatherMap API key
   --telegram     STR     Telegram Bot API token
-  --port         INT     HTTPS port (e.g., 8443)
+  --public_ip    STR     Public IP
+  --port         INT     Port (e.g., 8443)
 
 Example:
-  $(basename "$0") --owm abc123 --telegram 123456:ABC-DEF --port 8443
+  $(basename "$0") --owm "abc123" --telegram "123456:ABC-DEF" --public_ip "198.51.100.42" --port 8443
 EOH
     printf "%s" "${RESET}"
     exit 1
@@ -44,11 +45,13 @@ check_provided_args() {
         case "$arg" in
             --owm) has_owm=1 ;;
             --telegram) has_telegram=1 ;;
+            --public_ip) has_public_ip=1 ;;
             --port) has_port=1 ;;
         esac
     done
     [ $has_owm -eq 0 ] && stderr "Missing required argument --owm"
     [ $has_telegram -eq 0 ] && stderr "Missing required argument --telegram"
+    [ $has_public_ip -eq 0 ] && stderr "Missing required argument --public_ip"
     [ $has_port -eq 0 ] && stderr "Missing required argument --port"
     
     while [ $# -gt 0 ]; do
@@ -56,6 +59,7 @@ check_provided_args() {
             -h|--help) print_help ;;
             --owm) validate_arg "$1" "$2"; OWM_KEY=$2; shift 2 ;;
             --telegram) validate_arg "$1" "$2"; TELEBOT_KEY=$2; shift 2 ;;
+            --public_ip) validate_arg "$1" "$2"; PUBLIC_IP=$2; shift 2 ;;
             --port) validate_arg "$1" "$2"; HTTPS_PORT=$2; shift 2 ;;
             *) stderr "Unknown argument: $1" ;;
         esac
@@ -97,23 +101,11 @@ if [ ! -f src/bot.py ]; then
 fi
 printf "%s✓ src/bot.py found%s\n" "${GREEN}" "${RESET}"
 
-printf "%sDetecting public IP...%s\n" "${GREEN}" "${RESET}"
-PUBLIC_IP=$(curl -s --max-time 5 ifconfig.co 2>/dev/null || curl -s --max-time 5 ident.me 2>/dev/null || echo "")
-if [ -z "$PUBLIC_IP" ]; then
-    printf "%sFailed to detect public IP%s\n" "${RED}" "${RESET}"
-    exit 1
-fi
-printf "%s✓ Public IP: %s%s\n" "${GREEN}" "$PUBLIC_IP" "${RESET}"
-
 printf "%sBuilding bot image...%s\n" "${GREEN}" "${RESET}"
 DOCKER_TAG=$(LC_ALL=C tr -dc a-z0-9 </dev/urandom 2>/dev/null | head -c 6 || openssl rand -hex 3 2>/dev/null || date +%s | tail -c 7)
 printf "%sImage tag: skbweatherbot:%s%s\n" "${GREEN}" "$DOCKER_TAG" "${RESET}"
 
-docker build \
-    --build-arg OWM_KEY="$OWM_KEY" \
-    --build-arg TELEBOT_KEY="$TELEBOT_KEY" \
-    --build-arg WEBHOOK_HOST="$PUBLIC_IP" \
-    --build-arg WEBHOOK_PORT="$HTTPS_PORT" \
+docker build --build-arg WEBHOOK_LISTENER="$PUBLIC_IP" \
     -t "skbweatherbot:$DOCKER_TAG" . || {
         printf "%sDocker build failed%s\n" "${RED}" "${RESET}"
         exit 1
@@ -131,9 +123,9 @@ docker stop skbweatherbot 2>/dev/null || true
 docker rm skbweatherbot 2>/dev/null || true
 
 printf "%sStarting container...%s\n" "${GREEN}" "${RESET}"
-docker run -d \
-    --restart=always \
-    --name skbweatherbot \
+docker run -e OWM_KEY=$OWM_KEY -e TELEBOT_KEY=$TELEBOT_KEY \
+    -e WEBHOOK_LISTENER=$PUBLIC_IP -e WEBHOOK_PORT=$HTTPS_PORT -d \
+    --restart=always --name skbweatherbot \
     -p "$HTTPS_PORT:$HTTPS_PORT" \
     "skbweatherbot:$DOCKER_TAG" || {
         printf "%sFailed to start container%s\n" "${RED}" "${RESET}"
