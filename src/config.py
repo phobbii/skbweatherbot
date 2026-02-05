@@ -16,18 +16,6 @@ def get_env_or_exit(key: str) -> str:
     return value.strip()
 
 
-def get_webhook_host() -> str:
-    """Detect public IP address from external services."""
-    ip_services = ['https://ident.me', 'http://ipinfo.io/ip']
-    for service in ip_services:
-        try:
-            response = urllib.request.urlopen(service, timeout=1).read().decode('utf8')
-            return re.sub(r"^\s+|\n|\r|\s+$", '', response)
-        except Exception:
-            logger.warning(f"Service {service} unavailable")
-    sys.exit("WEBHOOK_HOST could not be determined")
-
-
 def find_ssl_files() -> tuple[str, str]:
     """Find SSL certificate and key files in current directory."""
     cert_file = None
@@ -52,12 +40,11 @@ OWM_KEY = get_env_or_exit('OWM_KEY')
 TELEBOT_KEY = get_env_or_exit('TELEBOT_KEY')
 
 # Webhook configuration
-WEBHOOK_HOST = get_webhook_host()
+WEBHOOK_LISTENER = get_env_or_exit('WEBHOOK_LISTENER')
 WEBHOOK_PORT = get_env_or_exit('WEBHOOK_PORT')
-WEBHOOK_LISTEN = get_env_or_exit('WEBHOOK_LISTEN')
 WEBHOOK_SSL_CERT, WEBHOOK_SSL_PRIV = find_ssl_files()
 
-WEBHOOK_URL_BASE = f"https://{WEBHOOK_HOST}:{WEBHOOK_PORT}"
+WEBHOOK_URL_BASE = f"https://{WEBHOOK_LISTENER}:{WEBHOOK_PORT}"
 WEBHOOK_URL_PATH = f"/{TELEBOT_KEY}/"
 
 # Content types
