@@ -12,7 +12,6 @@ Bot link: https://telegram.me/skbweatherbot
 ├── deploy_container.sh             # Automated deployment script
 ├── requirements.txt                # Python dependencies
 ├── README.md                       # This file
-├── DOCKER.md                       # Docker deployment guide
 ├── ARCHITECTURE.md                 # Architecture documentation
 └── src/                            # Source code
     ├── bot.py                      # Main entry point
