@@ -206,7 +206,7 @@ get_env_or_exit("OWM_KEY")
      ↓
 get_env_or_exit("TELEBOT_KEY")
      ↓
-get_env_or_exit("WEBHOOK_LISTENER")
+get_env_or_exit("WEBHOOK_HOST")
      ↓
 get_env_or_exit("WEBHOOK_PORT")
      ↓

@@ -2,7 +2,6 @@
 import os
 import sys
 import re
-import urllib.request
 import logging
 
 logger = logging.getLogger(__name__)
@@ -10,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 def get_env_or_exit(key: str) -> str:
     """Get environment variable or exit if not found."""
-    value = os.environ.get(key)
+    value = os.getenv(key)
     if not value:
         sys.exit(f'{key} not exist or null')
     return value.strip()
@@ -40,11 +39,12 @@ OWM_KEY = get_env_or_exit('OWM_KEY')
 TELEBOT_KEY = get_env_or_exit('TELEBOT_KEY')
 
 # Webhook configuration
-WEBHOOK_LISTENER = get_env_or_exit('WEBHOOK_LISTENER')
+WEBHOOK_LISTENER = os.getenv('WEBHOOK_LISTENER', '0.0.0.0')
+WEBHOOK_HOST = get_env_or_exit('WEBHOOK_HOST')
 WEBHOOK_PORT = get_env_or_exit('WEBHOOK_PORT')
 WEBHOOK_SSL_CERT, WEBHOOK_SSL_PRIV = find_ssl_files()
 
-WEBHOOK_URL_BASE = f"https://{WEBHOOK_LISTENER}:{WEBHOOK_PORT}"
+WEBHOOK_URL_BASE = f"https://{WEBHOOK_HOST}:{WEBHOOK_PORT}"
 WEBHOOK_URL_PATH = f"/{TELEBOT_KEY}/"
 
 # Content types

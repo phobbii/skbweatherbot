@@ -105,7 +105,7 @@ printf "%sBuilding bot image...%s\n" "${GREEN}" "${RESET}"
 DOCKER_TAG=$(LC_ALL=C tr -dc a-z0-9 </dev/urandom 2>/dev/null | head -c 6 || openssl rand -hex 3 2>/dev/null || date +%s | tail -c 7)
 printf "%sImage tag: skbweatherbot:%s%s\n" "${GREEN}" "$DOCKER_TAG" "${RESET}"
 
-docker build --build-arg WEBHOOK_LISTENER="$PUBLIC_IP" \
+docker build --build-arg WEBHOOK_HOST="$PUBLIC_IP" \
     -t "skbweatherbot:$DOCKER_TAG" . || {
         printf "%sDocker build failed%s\n" "${RED}" "${RESET}"
         exit 1
@@ -124,7 +124,7 @@ docker rm skbweatherbot 2>/dev/null || true
 
 printf "%sStarting container...%s\n" "${GREEN}" "${RESET}"
 docker run -e OWM_KEY=$OWM_KEY -e TELEBOT_KEY=$TELEBOT_KEY \
-    -e WEBHOOK_LISTENER=$PUBLIC_IP -e WEBHOOK_PORT=$HTTPS_PORT -d \
+    -e WEBHOOK_HOST=$PUBLIC_IP -e WEBHOOK_PORT=$HTTPS_PORT -d \
     --restart=always --name skbweatherbot \
     -p "$HTTPS_PORT:$HTTPS_PORT" \
     "skbweatherbot:$DOCKER_TAG" || {

@@ -11,7 +11,7 @@ FROM python:${PY_VERSION}-alpine${ALPINE_VERSION}
 # -------------------------
 ARG BOT_HOME=/opt/weatherbot
 ARG BOT_USR=botusr
-ARG WEBHOOK_LISTENER
+ARG WEBHOOK_HOST
 
 LABEL org.opencontainers.image.authors="Yevhen Skyba <skiba.eugene@gmail.com>"
 
@@ -35,7 +35,7 @@ RUN openssl req -newkey rsa:2048 -sha256 -nodes \
         -keyout url_private.key \
         -x509 -days 3650 \
         -out url_certificate.pem \
-        -subj "/C=US/ST=State/O=Organization/CN=${WEBHOOK_LISTENER}" \
+        -subj "/C=US/ST=State/O=Organization/CN=${WEBHOOK_HOST}" \
  && apk del openssl
 
 # -------------------------

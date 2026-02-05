@@ -64,8 +64,9 @@ Set the following environment variables before running:
 ```bash
 export OWM_KEY="your_openweathermap_api_key"
 export TELEBOT_KEY="your_telegram_bot_token"
+export WEBHOOK_HOST="your_public_ip"
 export WEBHOOK_PORT="listener_preferred_port"
-export WEBHOOK_LISTENER="your_public_ip"
+export WEBHOOK_LISTENER="aiohttp_listener" (Optional, default - 0.0.0.0)
 ```
 
 ## Running the Bot
@@ -83,9 +84,7 @@ pip install -r requirements.txt
 ```bash
 cd src
 openssl req -newkey rsa:2048 -sha256 -nodes \
-    -keyout ${BOT_HOME}/url_private.key \
-    -x509 -days 3650 \
-    -out ${BOT_HOME}/url_certificate.pem \
+    -keyout key.key -x509 -days 3650 -out cert.pem \
     -subj "/C=US/ST=State/O=Organization/CN=${WEBHOOK_HOST}"
 ```
 
@@ -95,9 +94,8 @@ python3 bot.py
 ```
 
 The bot will:
-1. Detect your public IP address for webhook setup
-2. Start an aiohttp server with SSL
-3. Listen for incoming webhook requests
+1. Start an aiohttp server with SSL
+2. Listen for incoming webhook requests
 
 ### For Production (Docker)
 
