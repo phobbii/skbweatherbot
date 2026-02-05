@@ -40,7 +40,7 @@ validate_arg() {
 check_provided_args() {
     [ $# -eq 0 ] && stderr "No arguments supplied"
     
-    has_owm=0 has_telegram=0 has_port=0
+    has_owm=0 has_telegram=0 has_public_ip=0 has_port=0
     for arg in "$@"; do
         case "$arg" in
             --owm) has_owm=1 ;;
