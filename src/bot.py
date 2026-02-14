@@ -3,6 +3,8 @@
 """Main bot entry point."""
 import ssl
 import logging
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
 import telebot
 from aiohttp import web
 
@@ -20,7 +22,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Initialize bot and services
-bot = telebot.TeleBot(config.TELEBOT_KEY)
+bot = telebot.TeleBot(config.TELEBOT_KEY, threaded=False)
 weather_service = WeatherService(config.OWM_KEY)
 
 # Initialize handlers
@@ -30,6 +32,7 @@ callback_handlers = CallbackHandlers(bot, cmd_handlers)
 
 # Setup aiohttp app
 app = web.Application()
+executor = ThreadPoolExecutor(max_workers=4)
 
 
 async def handle_webhook(request: web.Request) -> web.Response:
@@ -37,10 +40,14 @@ async def handle_webhook(request: web.Request) -> web.Response:
     if request.match_info.get('token') == bot.token:
         request_body_dict = await request.json()
         update = telebot.types.Update.de_json(request_body_dict)
-        bot.process_new_updates([update])
+        loop = asyncio.get_event_loop()
+        loop.run_in_executor(
+            executor,
+            bot.process_new_updates,
+            [update]
+        )
         return web.Response()
     return web.Response(status=403)
-
 
 app.router.add_post('/{token}/', handle_webhook)
 
@@ -89,19 +96,24 @@ def wrong_content_message(message: telebot.types.Message) -> None:
 def main() -> None:
     """Main function to start the bot."""
     logger.info("Starting bot...")
-    
+
     # Setup webhook
     bot.remove_webhook()
+
+    # Read certificate fully before set_webhook
+    with open(config.WEBHOOK_SSL_CERT, 'rb') as f:
+        cert_data = f.read()
+
     bot.set_webhook(
         url=config.WEBHOOK_URL_BASE + config.WEBHOOK_URL_PATH,
-        certificate=open(config.WEBHOOK_SSL_CERT, 'r')
+        certificate=cert_data
     )
     logger.info(f"Webhook set to {config.WEBHOOK_URL_BASE + config.WEBHOOK_URL_PATH}")
-    
+
     # Setup SSL context
     context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
     context.load_cert_chain(config.WEBHOOK_SSL_CERT, config.WEBHOOK_SSL_PRIV)
-    
+
     # Start server
     logger.info(f"Starting server on {config.WEBHOOK_LISTENER}:{config.WEBHOOK_PORT}")
     web.run_app(
@@ -110,7 +122,6 @@ def main() -> None:
         port=int(config.WEBHOOK_PORT),
         ssl_context=context
     )
-
 
 if __name__ == '__main__':
     main()
