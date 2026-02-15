@@ -9,14 +9,14 @@ Telegram Server
       ↓
    Google Cloud Functions (gen2)
       ↓
-   src/bot.py → webhook_run(request)
+   src/main.py → webhook_run(request)
       ↓
    Validate method (POST) & secret token
       ↓
    telebot.process_new_updates()
       ↓
    ┌─────────────────────────────────┐
-   │  Handler Registration (bot.py)  │
+   │  Handler Registration (main.py)  │
    └─────────────────────────────────┘
       ↓
    ┌──────────────┬──────────────┬──────────────┐
@@ -42,7 +42,7 @@ OpenWeatherMap  Retry Logic  Keyboards
 ## Module Dependencies
 
 ```
-src/bot.py
+src/main.py
 ├── src/config.py (settings)
 ├── src/services/weather_service.py
 │   └── src/config.py
@@ -82,7 +82,7 @@ src/config.py
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                     src/bot.py                          │
+│                     src/main.py                         │
 │  - Initializes bot, services, handlers                  │
 │  - Registers message handlers                           │
 │  - webhook_run(): Cloud Functions entry point            │
@@ -139,7 +139,7 @@ src/config.py
 1. User: "London"
 2. Telegram → Webhook → Cloud Function → webhook_run(request)
 3. Validate POST method & X-Telegram-Bot-Api-Secret-Token
-4. src/bot.py → weather_message() → MessageHandlers.handle_weather_request()
+4. src/main.py → weather_message() → MessageHandlers.handle_weather_request()
 5. MessageHandlers → WeatherService.get_current_weather(city="London")
 6. WeatherService → OpenWeatherMap API
 7. WeatherService → format_current_weather()
@@ -154,7 +154,7 @@ src/config.py
 1. User: "/start"
 2. Telegram → Webhook → Cloud Function → webhook_run(request)
 3. Validate POST method & secret token
-4. src/bot.py → start_command() → CommandHandlers.handle_start()
+4. src/main.py → start_command() → CommandHandlers.handle_start()
 5. CommandHandlers → bot_helpers.create_inline_keyboard()
 6. CommandHandlers → bot_helpers.send_message()
 7. bot_helpers → send_with_retry() → bot.send_message()
@@ -168,7 +168,7 @@ src/config.py
 1. User: clicks "forecast" button
 2. Telegram → Webhook → Cloud Function → webhook_run(request)
 3. Validate POST method & secret token
-4. src/bot.py → callback_query() → CallbackHandlers.handle_callback()
+4. src/main.py → callback_query() → CallbackHandlers.handle_callback()
 5. CallbackHandlers → _handle_forecast_callback()
 6. CallbackHandlers → bot_helpers.create_location_keyboard()
 7. CallbackHandlers → bot_helpers.send_message()
@@ -218,7 +218,7 @@ os.getenv("WEBHOOK_TOKEN")
      ↓
 All config loaded
      ↓
-src/bot.py imports config
+src/main.py imports config
      ↓
 Initialize services with config
      ↓

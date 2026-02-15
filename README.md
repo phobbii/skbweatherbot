@@ -13,7 +13,7 @@ Bot link: https://telegram.me/skbweatherbot
 ├── README.md                       # This file
 ├── ARCHITECTURE.md                 # Architecture documentation
 └── src/                            # Source code
-    ├── bot.py                      # Main entry point
+    ├── main.py                     # Main entry point
     ├── config.py                   # Configuration and environment variables
     ├── handlers/                   # Message and command handlers
     │   ├── __init__.py
@@ -75,7 +75,7 @@ pip install -r requirements.txt
 3. Run the bot (long polling mode):
 ```bash
 cd src
-python3 bot.py
+python3 main.py
 ```
 
 ### For Production (Google Cloud Functions)
