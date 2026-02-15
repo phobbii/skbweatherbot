@@ -1,12 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """Main bot entry point."""
-import ssl
 import logging
-import asyncio
-from concurrent.futures import ThreadPoolExecutor
 import telebot
-from aiohttp import web
 
 import config
 from services.weather_service import WeatherService
@@ -29,27 +25,6 @@ weather_service = WeatherService(config.OWM_KEY)
 cmd_handlers = CommandHandlers(bot, weather_service)
 msg_handlers = MessageHandlers(bot, weather_service)
 callback_handlers = CallbackHandlers(bot, cmd_handlers)
-
-# Setup aiohttp app
-app = web.Application()
-executor = ThreadPoolExecutor(max_workers=4)
-
-
-async def handle_webhook(request: web.Request) -> web.Response:
-    """Handle incoming webhook requests."""
-    if request.match_info.get('token') == bot.token:
-        request_body_dict = await request.json()
-        update = telebot.types.Update.de_json(request_body_dict)
-        loop = asyncio.get_event_loop()
-        loop.run_in_executor(
-            executor,
-            bot.process_new_updates,
-            [update]
-        )
-        return web.Response()
-    return web.Response(status=403)
-
-app.router.add_post('/{token}/', handle_webhook)
 
 
 # Register handlers
@@ -93,35 +68,55 @@ def wrong_content_message(message: telebot.types.Message) -> None:
     msg_handlers.handle_wrong_content(message)
 
 
-def main() -> None:
-    """Main function to start the bot."""
-    logger.info("Starting bot...")
+def webhook_run(request):
+    """Handle incoming Telegram webhook requests."""
 
-    # Setup webhook
-    bot.remove_webhook()
+    if request.method != 'POST':
+        logger.warning('Non-POST request received')
+        return 'Method Not Allowed', 405
 
-    # Read certificate fully before set_webhook
-    with open(config.WEBHOOK_SSL_CERT, 'rb') as f:
-        cert_data = f.read()
+    token = request.headers.get('X-Telegram-Bot-Api-Secret-Token')
+    if token != config.WEBHOOK_TOKEN:
+        logger.warning('Invalid secret token')
+        return 'Forbidden', 403
 
-    bot.set_webhook(
-        url=config.WEBHOOK_URL_BASE + config.WEBHOOK_URL_PATH,
-        certificate=cert_data
-    )
-    logger.info(f"Webhook set to {config.WEBHOOK_URL_BASE + config.WEBHOOK_URL_PATH}")
+    try:
+        body = request.get_json(silent=True)
 
-    # Setup SSL context
-    context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
-    context.load_cert_chain(config.WEBHOOK_SSL_CERT, config.WEBHOOK_SSL_PRIV)
+        if not body:
+            logger.warning('Empty request body')
+            return 'Bad Request', 400
 
-    # Start server
-    logger.info(f"Starting server on {config.WEBHOOK_LISTENER}:{config.WEBHOOK_PORT}")
-    web.run_app(
-        app,
-        host=config.WEBHOOK_LISTENER,
-        port=int(config.WEBHOOK_PORT),
-        ssl_context=context
-    )
+        update = telebot.types.Update.de_json(body)
+
+        logger.info(
+            f'Update received: id={update.update_id}, '
+            f'type={"message" if update.message else "callback" if update.callback_query else "other"}'
+        )
+
+        bot.process_new_updates([update])
+
+    except Exception:
+        logger.exception('Error processing update')
+
+    return 'OK', 200
+
+
+def local_run():
+    """Local long polling."""
+    logger.info('Starting bot in local polling mode...')
+    
+    try:
+        bot.remove_webhook()
+        logger.info('Webhook removed. Starting infinity polling.')
+        
+        bot.infinity_polling(
+            timeout=100,
+            long_polling_timeout=100
+        )
+    except Exception:
+        logger.exception('Bot stopped due to an unexpected error in local polling')
+
 
 if __name__ == '__main__':
-    main()
+    local_run()

@@ -7,7 +7,11 @@ Telegram Server
       ↓
    Webhook (HTTPS)
       ↓
-   src/bot.py (aiohttp handler)
+   Google Cloud Functions (gen2)
+      ↓
+   src/bot.py → webhook_run(request)
+      ↓
+   Validate method (POST) & secret token
       ↓
    telebot.process_new_updates()
       ↓
@@ -81,7 +85,8 @@ src/config.py
 │                     src/bot.py                          │
 │  - Initializes bot, services, handlers                  │
 │  - Registers message handlers                           │
-│  - Starts aiohttp server                                │
+│  - webhook_run(): Cloud Functions entry point            │
+│  - local_run(): long polling for development            │
 └─────────────────────────────────────────────────────────┘
                           │
         ┌─────────────────┼─────────────────┐
@@ -132,41 +137,44 @@ src/config.py
 
 ```
 1. User: "London"
-2. Telegram → Webhook → src/bot.py → handle_webhook()
-3. src/bot.py → weather_message() → MessageHandlers.handle_weather_request()
-4. MessageHandlers → WeatherService.get_current_weather(city="London")
-5. WeatherService → OpenWeatherMap API
-6. WeatherService → format_current_weather()
-7. MessageHandlers → bot_helpers.reply_to_message()
-8. bot_helpers → send_with_retry() → bot.reply_to()
-9. Response sent to user
+2. Telegram → Webhook → Cloud Function → webhook_run(request)
+3. Validate POST method & X-Telegram-Bot-Api-Secret-Token
+4. src/bot.py → weather_message() → MessageHandlers.handle_weather_request()
+5. MessageHandlers → WeatherService.get_current_weather(city="London")
+6. WeatherService → OpenWeatherMap API
+7. WeatherService → format_current_weather()
+8. MessageHandlers → bot_helpers.reply_to_message()
+9. bot_helpers → send_with_retry() → bot.reply_to()
+10. Response sent to user
 ```
 
 ### Example 2: User clicks /start
 
 ```
 1. User: "/start"
-2. Telegram → Webhook → src/bot.py → handle_webhook()
-3. src/bot.py → start_command() → CommandHandlers.handle_start()
-4. CommandHandlers → bot_helpers.create_inline_keyboard()
-5. CommandHandlers → bot_helpers.send_message()
-6. bot_helpers → send_with_retry() → bot.send_message()
-7. CommandHandlers → bot_helpers.send_sticker()
-8. Response sent to user
+2. Telegram → Webhook → Cloud Function → webhook_run(request)
+3. Validate POST method & secret token
+4. src/bot.py → start_command() → CommandHandlers.handle_start()
+5. CommandHandlers → bot_helpers.create_inline_keyboard()
+6. CommandHandlers → bot_helpers.send_message()
+7. bot_helpers → send_with_retry() → bot.send_message()
+8. CommandHandlers → bot_helpers.send_sticker()
+9. Response sent to user
 ```
 
 ### Example 3: User clicks inline button
 
 ```
 1. User: clicks "forecast" button
-2. Telegram → Webhook → src/bot.py → handle_webhook()
-3. src/bot.py → callback_query() → CallbackHandlers.handle_callback()
-4. CallbackHandlers → _handle_forecast_callback()
-5. CallbackHandlers → bot_helpers.create_location_keyboard()
-6. CallbackHandlers → bot_helpers.send_message()
-7. CallbackHandlers → bot.register_next_step_handler()
-8. Response sent to user
-9. Next message from user → CommandHandlers.handle_forecast_input()
+2. Telegram → Webhook → Cloud Function → webhook_run(request)
+3. Validate POST method & secret token
+4. src/bot.py → callback_query() → CallbackHandlers.handle_callback()
+5. CallbackHandlers → _handle_forecast_callback()
+6. CallbackHandlers → bot_helpers.create_location_keyboard()
+7. CallbackHandlers → bot_helpers.send_message()
+8. CallbackHandlers → bot.register_next_step_handler()
+9. Response sent to user
+10. Next message from user → CommandHandlers.handle_forecast_input()
 ```
 
 ## Error Handling Flow
@@ -202,15 +210,11 @@ Program Start
      ↓
 Import src/config.py
      ↓
-get_env_or_exit("OWM_KEY")
+os.getenv("OWM_KEY")
      ↓
-get_env_or_exit("TELEBOT_KEY")
+os.getenv("TELEBOT_KEY")
      ↓
-get_env_or_exit("WEBHOOK_HOST")
-     ↓
-get_env_or_exit("WEBHOOK_PORT")
-     ↓
-find_ssl_files() → Scan directory
+os.getenv("WEBHOOK_TOKEN")
      ↓
 All config loaded
      ↓
@@ -218,7 +222,27 @@ src/bot.py imports config
      ↓
 Initialize services with config
      ↓
-Start bot
+Start bot (webhook_run or local_run)
+```
+
+## Deployment Flow
+
+```
+Cloud Build Trigger
+     ↓
+gcp-cloudbuild.yaml
+     ↓
+Step 1: DEPLOY
+  gcloud functions deploy (gen2)
+  - Set runtime, region, memory, env vars
+  - Secrets from GCP Secret Manager
+     ↓
+Step 2: WEBHOOK
+  - Get deployed function URL
+  - Delete previous Telegram webhook
+  - Set new webhook with secret token
+     ↓
+Bot live and receiving updates
 ```
 
 ## Key Design Patterns Used
