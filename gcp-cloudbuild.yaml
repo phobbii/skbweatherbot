@@ -8,12 +8,12 @@ steps:
     - '-c'
     - |
       gcloud functions deploy $_NAME \
-        --gen2 \
         --runtime $_RUNTIME \
         --region $_REGION \
         --source $_SOURCE \
         --entry-point $_ENTRY_POINT \
         --allow-unauthenticated \
+        --trigger-http \
         --memory $_MEMORY \
         --max-instances $_MAX_INSTANCES \
         --concurrency $_CONCURRENCY \
