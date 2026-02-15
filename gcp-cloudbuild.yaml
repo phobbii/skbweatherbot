@@ -8,6 +8,7 @@ steps:
     - '-c'
     - |
       gcloud functions deploy $_NAME \
+        --gen2 \
         --runtime $_RUNTIME \
         --region $_REGION \
         --source $_SOURCE \
@@ -34,13 +35,19 @@ steps:
         --format='value(serviceConfig.uri)')
       echo "Function URL: $$URL"
 
-      #Remove previous webhook
-      curl -s -X POST "https://api.telegram.org/bot$$TELEBOT_KEY/deleteWebhook"
+      # Get current webhook URL
+      CURRENT_URL=$(curl -s "https://api.telegram.org/bot$$TELEBOT_KEY/getWebhookInfo" | python3 -c "import sys,json; print(json.load(sys.stdin).get('result',{}).get('url',''))")
+      echo "Current webhook URL: $$CURRENT_URL"
 
-      # Set webhook
-      curl -s -X POST "https://api.telegram.org/bot$$TELEBOT_KEY/setWebhook" \
-        -F "url=$$URL" \
-        -F "secret_token=$$WEBHOOK_TOKEN"
+      if [ "$$URL" = "$$CURRENT_URL" ]; then
+        echo "Webhook URL unchanged, skipping update"
+      else
+        echo "Updating webhook URL"
+        curl -s -X POST "https://api.telegram.org/bot$$TELEBOT_KEY/deleteWebhook"
+        curl -s -X POST "https://api.telegram.org/bot$$TELEBOT_KEY/setWebhook" \
+          -F "url=$$URL" \
+          -F "secret_token=$$WEBHOOK_TOKEN"
+      fi
 
 
 substitutions:
@@ -68,3 +75,4 @@ availableSecrets:
 
 
 timeout: 600s
+serviceAccount: 'projects/striking-retina-232710/serviceAccounts/cloudbuild-deployer@striking-retina-232710.iam.gserviceaccount.com'
