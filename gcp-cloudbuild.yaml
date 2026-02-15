@@ -1,116 +1,67 @@
 steps:
-# Create Static IP
-- name: 'gcr.io/cloud-builders/gcloud'
-  id: CREATE IP
-  entrypoint: 'bash'
-  args:
-  - '-c'
-  - |- 
-    if [[ -n $(gcloud compute addresses list --filter="name=('NAME' $_INSTANCE_NAME)" --format="value(NAME)") ]]; then
-        gcloud compute addresses delete $_INSTANCE_NAME --project=${PROJECT_ID} --region=$_SERVICE_REGION --quiet
-        gcloud compute addresses create $_INSTANCE_NAME --project=${PROJECT_ID} --region=$_SERVICE_REGION
-        gcloud compute addresses describe $_INSTANCE_NAME --project=${PROJECT_ID} --region=$_SERVICE_REGION --format="value(address)" > /workspace/public_ip.txt
-    else
-        gcloud compute addresses create $_INSTANCE_NAME --project=${PROJECT_ID} --region=$_SERVICE_REGION
-        gcloud compute addresses describe $_INSTANCE_NAME --project=${PROJECT_ID} --region=$_SERVICE_REGION --format="value(address)" > /workspace/public_ip.txt
-    fi
-
-# Remove old docker images
-- name: 'gcr.io/cloud-builders/gcloud'
-  id: CLEAN REPO
-  entrypoint: 'bash'
-  args:
-  - '-c'
-  - |- 
-    if [[ -n $(gcloud artifacts docker images list $_SERVICE_REPO --format="value(IMAGE)") ]]; then
-        gcloud artifacts docker images delete $_SERVICE_REPO/$_SERVICE_REPO_NAME --quiet
-    else
-        echo "$_SERVICE_REPO repo is empty. Clean skipped"
-    fi
-
-# Docker build image
-- name: 'gcr.io/cloud-builders/docker'
-  id: BUILD
-  entrypoint: bash
-  args:
-  - '-c'
-  - |-
-    docker build --build-arg WEBHOOK_HOST=$(cat /workspace/public_ip.txt) -t $_SERVICE_IMAGE . -f Dockerfile
-  
-# Docker push image
-- name: 'gcr.io/cloud-builders/docker'
-  id: PUSH
-  args: ['push', '$_SERVICE_IMAGE']
-
-# Deploy image to instance
+# Deploy bot
 - name: 'gcr.io/cloud-builders/gcloud'
   id: DEPLOY
   entrypoint: 'bash'
-  secretEnv: ['OWM_KEY', 'TELEBOT_KEY']
+  secretEnv: ['OWM_KEY', 'TELEBOT_KEY', 'WEBHOOK_TOKEN']
   args:
-  - '-c'
-  - |-
-    PUBLIC_IP=$(cat /workspace/public_ip.txt)
-    if [[ -z $(gcloud compute instances list --filter="name=('NAME' $_INSTANCE_NAME)" --format="value(NAME)") ]]; then
-        gcloud compute instances create $_INSTANCE_NAME --machine-type=$_INSTANCE_TYPE \
-            --image=$_INSTANCE_IMAGE --zone=$_SERVICE_REGION-$_SERVICE_ZONE --labels=$_INSTANCE_LABELS --tags=$_INSTANCE_NETWORK_TAGS \
-            --maintenance-policy=$_INSTANCE_MAINTANANCE_POLICY --address=$$PUBLIC_IP --network-tier=$_NETWORK_TIER \
-            --boot-disk-size=$_INSTANCE_DISK_SIZE --metadata enable-osconfig=TRUE,startup-script="
-              #!/bin/bash
-              sudo apt-get update
-              sudo apt-get install -y ca-certificates curl lsb-release
-              sudo install -m 0755 -d /etc/apt/keyrings
-              sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
-              sudo chmod a+r /etc/apt/keyrings/docker.asc
-              echo \"deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable\" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-              sudo apt-get update
-              sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-              sudo gcloud auth configure-docker $_SERVICE_REGION-docker.pkg.dev --quiet
-              sudo docker run -e OWM_KEY=$$OWM_KEY -e TELEBOT_KEY=$$TELEBOT_KEY -e WEBHOOK_HOST=$$PUBLIC_IP -e WEBHOOK_PORT=$_HTTPS_PORT -d --restart=always -p $_HTTPS_PORT:$_HTTPS_PORT $_SERVICE_IMAGE
-            "
-        gcloud compute instances remove-metadata $_INSTANCE_NAME --zone=$_SERVICE_REGION-$_SERVICE_ZONE --keys=google-logging-enabled
-    else
-        if [[ $(gcloud compute instances list --filter="name=('NAME' $_INSTANCE_NAME)" --format="value(STATUS)") == "TERMINATED" ]]; then
-            gcloud compute instances delete $_INSTANCE_NAME --zone $_SERVICE_REGION-$_SERVICE_ZONE --quiet
-            gcloud compute instances create $_INSTANCE_NAME --machine-type=$_INSTANCE_TYPE \
-                --image=$_INSTANCE_IMAGE --zone=$_SERVICE_REGION-$_SERVICE_ZONE --labels=$_INSTANCE_LABELS --tags=$_INSTANCE_NETWORK_TAGS \
-                --maintenance-policy=$_INSTANCE_MAINTANANCE_POLICY --address=$$PUBLIC_IP --network-tier=$_NETWORK_TIER \
-                --boot-disk-size=$_INSTANCE_DISK_SIZE --metadata enable-osconfig=TRUE,startup-script="
-                  #!/bin/bash
-                  sudo apt-get update
-                  sudo apt-get install -y ca-certificates curl lsb-release
-                  sudo install -m 0755 -d /etc/apt/keyrings
-                  sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
-                  sudo chmod a+r /etc/apt/keyrings/docker.asc
-                  echo \"deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable\" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-                  sudo apt-get update
-                  sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-                  sudo gcloud auth configure-docker $_SERVICE_REGION-docker.pkg.dev --quiet
-                  sudo docker run -e OWM_KEY=$$OWM_KEY -e TELEBOT_KEY=$$TELEBOT_KEY -e WEBHOOK_HOST=$$PUBLIC_IP -e WEBHOOK_PORT=$_HTTPS_PORT -d --restart=always -p $_HTTPS_PORT:$_HTTPS_PORT $_SERVICE_IMAGE
-                "
-            gcloud compute instances stop $_INSTANCE_NAME --zone $_SERVICE_REGION-$_SERVICE_ZONE
-            gcloud compute instances remove-metadata $_INSTANCE_NAME --zone=$_SERVICE_REGION-$_SERVICE_ZONE --keys=google-logging-enabled
-        elif [[ $(gcloud compute instances list --filter="name=('NAME' $_INSTANCE_NAME)" --format="value(STATUS)") == "RUNNING" ]]; then
-            gcloud compute instances delete $_INSTANCE_NAME --zone $_SERVICE_REGION-$_SERVICE_ZONE --quiet
-            gcloud compute instances create $_INSTANCE_NAME --machine-type=$_INSTANCE_TYPE \
-                --image=$_INSTANCE_IMAGE --zone=$_SERVICE_REGION-$_SERVICE_ZONE --labels=$_INSTANCE_LABELS --tags=$_INSTANCE_NETWORK_TAGS \
-                --maintenance-policy=$_INSTANCE_MAINTANANCE_POLICY --address=$$PUBLIC_IP --network-tier=$_NETWORK_TIER \
-                --boot-disk-size=$_INSTANCE_DISK_SIZE --metadata enable-osconfig=TRUE,startup-script="
-                  #!/bin/bash
-                  sudo apt-get update
-                  sudo apt-get install -y ca-certificates curl lsb-release
-                  sudo install -m 0755 -d /etc/apt/keyrings
-                  sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
-                  sudo chmod a+r /etc/apt/keyrings/docker.asc
-                  echo \"deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable\" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-                  sudo apt-get update
-                  sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-                  sudo gcloud auth configure-docker $_SERVICE_REGION-docker.pkg.dev --quiet
-                  sudo docker run -e OWM_KEY=$$OWM_KEY -e TELEBOT_KEY=$$TELEBOT_KEY -e WEBHOOK_HOST=$$PUBLIC_IP -e WEBHOOK_PORT=$_HTTPS_PORT -d --restart=always -p $_HTTPS_PORT:$_HTTPS_PORT $_SERVICE_IMAGE
-                "
-            gcloud compute instances remove-metadata $_INSTANCE_NAME --zone=$_SERVICE_REGION-$_SERVICE_ZONE --keys=google-logging-enabled
-        fi
-    fi
+    - '-c'
+    - |
+      gcloud functions deploy $_NAME \
+        --runtime $_RUNTIME \
+        --region $_REGION \
+        --source $_SOURCE \
+        --entry-point $_ENTRY_POINT \
+        --allow-unauthenticated \
+        --trigger-http \
+        --memory $_MEMORY \
+        --max-instances $_MAX_INSTANCES \
+        --concurrency $_CONCURRENCY \
+        --set-env-vars OWM_KEY=$$OWM_KEY,TELEBOT_KEY=$$TELEBOT_KEY,WEBHOOK_TOKEN=$$WEBHOOK_TOKEN
+
+# Configure webhook
+- name: 'gcr.io/cloud-builders/gcloud'
+  id: WEBHOOK
+  entrypoint: 'bash'
+  secretEnv: ['TELEBOT_KEY', 'WEBHOOK_TOKEN']
+  args:
+    - '-c'
+    - |
+      # Get function URL
+      URL=$(gcloud functions describe $_NAME \
+        --gen2 \
+        --region $_REGION \
+        --format='value(serviceConfig.uri)')
+      echo "Function URL: $$URL"
+
+      # Get current webhook URL
+      CURRENT_URL=$(curl -s "https://api.telegram.org/bot$$TELEBOT_KEY/getWebhookInfo" | python3 -c "import sys,json; print(json.load(sys.stdin).get('result',{}).get('url',''))")
+      echo "Current webhook URL: $$CURRENT_URL"
+
+      if [ "$$URL" = "$$CURRENT_URL" ]; then
+        echo "Webhook URL unchanged, skipping update"
+      else
+        echo "Updating webhook URL"
+        curl -s -X POST "https://api.telegram.org/bot$$TELEBOT_KEY/deleteWebhook"
+        curl -s -X POST "https://api.telegram.org/bot$$TELEBOT_KEY/setWebhook" \
+          -F "url=$$URL" \
+          -F "secret_token=$$WEBHOOK_TOKEN"
+      fi
+
+
+substitutions:
+    _REGION                       : us-east1
+    _NAME                         : skbweatherbot
+    _RUNTIME                      : python310
+    _ENTRY_POINT                  : webhook_run
+    _SOURCE                       : ./src/
+    _MEMORY                       : 512MB
+    _MAX_INSTANCES                : '1'
+    _CONCURRENCY                  : '1'
+    _SM_OWM_KEY_SECRET_NAME       : WEATHERBOT_OWM_KEY
+    _SM_TELEBOT_KEY_SECRET_NAME   : WEATHERBOT_TELEGRAM_KEY
+    _SM_WEBHOOK_TOKEN_SECRET_NAME : WEATHERBOT_WEBHOOK_TOKEN
+
 
 availableSecrets:
   secretManager:
@@ -118,21 +69,9 @@ availableSecrets:
     env: OWM_KEY
   - versionName: projects/${PROJECT_ID}/secrets/${_SM_TELEBOT_KEY_SECRET_NAME}/versions/latest
     env: TELEBOT_KEY
+  - versionName: projects/${PROJECT_ID}/secrets/${_SM_WEBHOOK_TOKEN_SECRET_NAME}/versions/latest
+    env: WEBHOOK_TOKEN
 
-substitutions:
-    _SERVICE_IMAGE               : ${_SERVICE_REPO}/${_SERVICE_REPO_NAME}:${SHORT_SHA}
-    _SERVICE_REPO                : ${_SERVICE_REGION}-docker.pkg.dev/${PROJECT_ID}/${_SERVICE_REPO_NAME}
-    _SERVICE_REGION              : us-east1
-    _SERVICE_ZONE                : b
-    _SERVICE_REPO_NAME           : skbweatherbot
-    _INSTANCE_NAME               : dlinst01
-    _INSTANCE_TYPE               : e2-micro
-    _INSTANCE_IMAGE              : projects/ubuntu-os-cloud/global/images/ubuntu-2204-jammy-v20260128
-    _INSTANCE_LABELS             : scheduled=true
-    _INSTANCE_NETWORK_TAGS       : weatherbot
-    _INSTANCE_MAINTANANCE_POLICY : MIGRATE
-    _INSTANCE_DISK_SIZE          : "10"
-    _NETWORK_TIER                : PREMIUM
-    _SM_OWM_KEY_SECRET_NAME      : WEATHERBOT_OWM_KEY
-    _SM_TELEBOT_KEY_SECRET_NAME  : WEATHERBOT_TELEGRAM_KEY
-    _HTTPS_PORT                  : "8443"
+
+timeout: 600s
+serviceAccount: 'projects/striking-retina-232710/serviceAccounts/cloudbuild-deployer@striking-retina-232710.iam.gserviceaccount.com'
