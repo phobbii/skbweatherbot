@@ -33,14 +33,14 @@ steps:
         --gen2 \
         --region $_REGION \
         --format='value(serviceConfig.uri)')
-      echo "Function URL: $URL"
+      echo "Function URL: $$URL"
 
       #Remove previous webhook
       curl -s -X POST "https://api.telegram.org/bot$$TELEBOT_KEY/deleteWebhook"
 
       # Set webhook
       curl -s -X POST "https://api.telegram.org/bot$$TELEBOT_KEY/setWebhook" \
-        -F "url=$URL" \
+        -F "url=$$URL" \
         -F "secret_token=$$WEBHOOK_TOKEN"
 
 
@@ -51,8 +51,8 @@ substitutions:
     _ENTRY_POINT                  : webhook_run
     _SOURCE                       : ./src/
     _MEMORY                       : 512MB
-    _MAX_INSTANCES                : 3
-    _CONCURRENCY                  : 1
+    _MAX_INSTANCES                : '3'
+    _CONCURRENCY                  : '1'
     _SM_OWM_KEY_SECRET_NAME       : WEATHERBOT_OWM_KEY
     _SM_TELEBOT_KEY_SECRET_NAME   : WEATHERBOT_TELEGRAM_KEY
     _SM_WEBHOOK_TOKEN_SECRET_NAME : WEATHERBOT_WEBHOOK_TOKEN
