@@ -8,8 +8,7 @@ Bot link: https://telegram.me/skbweatherbot
 
 ```
 /
-├── Dockerfile                      # Docker build configuration
-├── deploy_container.sh             # Automated deployment script
+├── gcp-cloudbuild.yaml             # GCP Cloud Build deployment config
 ├── requirements.txt                # Python dependencies
 ├── README.md                       # This file
 ├── ARCHITECTURE.md                 # Architecture documentation
@@ -39,23 +38,18 @@ Bot link: https://telegram.me/skbweatherbot
 - Inline keyboard navigation
 - Retry mechanism for API calls
 - Comprehensive error handling
-- Webhook-based deployment
+- Serverless deployment on Google Cloud Functions
 
 ## Requirements
 
-**Note:** The bot requires a public static IP address for webhook functionality in both development and production environments.
-
 ### Development
 - Python 3.9+
-- Public static IP address
-- SSL certificate and key files (.pem and .key) in the project directory
 - Environment variables (see below)
 
-### Production (Docker)
-- Docker 17.05+
-- Linux server with public static IP address
-- Open HTTPS port (e.g., 8443)
-- Root access for deployment
+### Production (Google Cloud Functions)
+- GCP project with Cloud Functions and Secret Manager enabled
+- Cloud Build trigger configured
+- Secrets stored in GCP Secret Manager
 
 ## Environment Variables
 
@@ -64,9 +58,7 @@ Set the following environment variables before running:
 ```bash
 export OWM_KEY="your_openweathermap_api_key"
 export TELEBOT_KEY="your_telegram_bot_token"
-export WEBHOOK_HOST="your_public_ip"
-export WEBHOOK_PORT="listener_preferred_port"
-export WEBHOOK_LISTENER="aiohttp_listener" (Optional, default - 0.0.0.0)
+export WEBHOOK_TOKEN="your_webhook_secret_token"
 ```
 
 ## Running the Bot
@@ -80,36 +72,32 @@ pip install -r requirements.txt
 
 2. Set environment variables (see above)
 
-3. Generate SSL certificate files (.pem and .key)
+3. Run the bot (long polling mode):
 ```bash
 cd src
-openssl req -newkey rsa:2048 -sha256 -nodes \
-    -keyout key.key -x509 -days 3650 -out cert.pem \
-    -subj "/C=US/ST=State/O=Organization/CN=${WEBHOOK_HOST}"
-```
-
-4. Run the bot:
-```bash
 python3 bot.py
 ```
 
-The bot will:
-1. Start an aiohttp server with SSL
-2. Listen for incoming webhook requests
+### For Production (Google Cloud Functions)
 
-### For Production (Docker)
+Deployment is automated via Cloud Build (`gcp-cloudbuild.yaml`). The pipeline:
 
-1. Ensure Docker is installed (version >= 17.05)
-2. Run the deployment script:
-```bash
-./deploy_container.sh --owm YOUR_KEY --telegram YOUR_TOKEN --public_ip YOUR_PUBLIC_IP --port PORT
-```
+1. Deploys the bot as a gen2 Cloud Function with HTTP trigger
+2. Configures the Telegram webhook to point to the function URL
+3. Secrets (`OWM_KEY`, `TELEBOT_KEY`, `WEBHOOK_TOKEN`) are pulled from GCP Secret Manager
 
-The deployment script will:
-1. Build a Docker image with all dependencies
-2. Generate SSL certificates
-3. Configure the webhook
-4. Start the container with auto-restart enabled
+Cloud Build substitution variables:
+
+| Variable | Default |
+|---|---|
+| `_REGION` | `us-east1` |
+| `_NAME` | `skbweatherbot` |
+| `_RUNTIME` | `python310` |
+| `_ENTRY_POINT` | `webhook_run` |
+| `_SOURCE` | `./src/` |
+| `_MEMORY` | `512MB` |
+| `_MAX_INSTANCES` | `3` |
+| `_CONCURRENCY` | `1` |
 
 ## Bot Commands
 
@@ -131,7 +119,7 @@ The deployment script will:
 - **Type hints**: all functions have type annotations
 - **Docstrings**: comprehensive documentation
 - **DRY principle**: shared functionality in base classes
-- **Logging**: proper logging 
+- **Logging**: proper logging
 
 ### Error Handling
 - **Retry mechanism**: automatic retry for failed API calls

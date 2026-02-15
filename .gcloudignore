@@ -4,6 +4,5 @@
 .github
 .gitignore
 ARCHITECTURE.md
-deploy_container.sh
 gcp-cloudbuild.yaml
 README.md

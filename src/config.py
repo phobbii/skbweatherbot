@@ -1,51 +1,12 @@
 """Configuration module for the weather bot."""
 import os
-import sys
-import re
-import logging
-
-logger = logging.getLogger(__name__)
-
-
-def get_env_or_exit(key: str) -> str:
-    """Get environment variable or exit if not found."""
-    value = os.getenv(key)
-    if not value:
-        sys.exit(f'{key} not exist or null')
-    return value.strip()
-
-
-def find_ssl_files() -> tuple[str, str]:
-    """Find SSL certificate and key files in current directory."""
-    cert_file = None
-    key_file = None
-    
-    for file in os.listdir('.'):
-        if re.search(r"\D+\.pem$", file):
-            cert_file = os.path.abspath(file)
-        elif re.search(r"\D+\.key$", file):
-            key_file = os.path.abspath(file)
-    
-    if not cert_file:
-        sys.exit("SSL certificate not found")
-    if not key_file:
-        sys.exit("SSL key not found")
-    
-    return cert_file, key_file
-
 
 # API Keys
-OWM_KEY = get_env_or_exit('OWM_KEY')
-TELEBOT_KEY = get_env_or_exit('TELEBOT_KEY')
+OWM_KEY = os.getenv('OWM_KEY')
+TELEBOT_KEY = os.getenv('TELEBOT_KEY')
 
-# Webhook configuration
-WEBHOOK_LISTENER = os.getenv('WEBHOOK_LISTENER', '0.0.0.0')
-WEBHOOK_HOST = get_env_or_exit('WEBHOOK_HOST')
-WEBHOOK_PORT = get_env_or_exit('WEBHOOK_PORT')
-WEBHOOK_SSL_CERT, WEBHOOK_SSL_PRIV = find_ssl_files()
-
-WEBHOOK_URL_BASE = f"https://{WEBHOOK_HOST}:{WEBHOOK_PORT}"
-WEBHOOK_URL_PATH = f"/{TELEBOT_KEY}/"
+# Webhook token
+WEBHOOK_TOKEN = os.getenv('WEBHOOK_TOKEN')
 
 # Content types
 CONTENT_TO_HANDLE = ['text', 'location']
