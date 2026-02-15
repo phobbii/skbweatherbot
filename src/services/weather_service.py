@@ -3,7 +3,7 @@ import re
 import datetime
 import pytz
 import pyowm
-from tzwhere import tzwhere
+from timezonefinder import TimezoneFinder
 from collections import defaultdict, Counter
 from typing import Optional
 import logging
@@ -19,7 +19,7 @@ class WeatherService:
     def __init__(self, api_key: str):
         """Initialize weather service with API key."""
         self.owm = pyowm.OWM(API_key=api_key, language='ru')
-        self.tz_finder = tzwhere.tzwhere()
+        self.tz_finder = TimezoneFinder()
     
     def is_online(self) -> bool:
         """Check if OWM API is online."""
@@ -56,9 +56,9 @@ class WeatherService:
             location = observation.get_location()
             weather = observation.get_weather()
 
-            timezone_str = self.tz_finder.tzNameAt(
-                location.get_lat(),
-                location.get_lon()
+            timezone_str = self.tz_finder.timezone_at(
+                lng=location.get_lon(),
+                lat=location.get_lat()
             )
 
             timezone = pytz.timezone(timezone_str) if timezone_str else pytz.utc
@@ -104,9 +104,9 @@ class WeatherService:
 
             location = forecast.get_forecast().get_location()
 
-            timezone_str = self.tz_finder.tzNameAt(
-                location.get_lat(),
-                location.get_lon()
+            timezone_str = self.tz_finder.timezone_at(
+                lng=location.get_lon(),
+                lat=location.get_lat()
             )
 
             timezone = pytz.timezone(timezone_str) if timezone_str else pytz.utc

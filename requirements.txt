@@ -1,8 +1,0 @@
-aiohttp>=3.11.11
-Shapely==1.8.5.post1
-pyowm==2.10.0
-pyTelegramBotAPI==4.2.0
-pytz>=2024.2
-tzwhere>=3.0.3
-emoji==2.15.0
-babel==2.18.0
