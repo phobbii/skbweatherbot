@@ -3,7 +3,7 @@
 """Main bot entry point."""
 import logging
 import telebot
-
+import functions_framework
 import config
 from services.weather_service import WeatherService
 from handlers.commands import CommandHandlers
@@ -68,6 +68,7 @@ def wrong_content_message(message: telebot.types.Message) -> None:
     msg_handlers.handle_wrong_content(message)
 
 
+@functions_framework.http
 def webhook_run(request):
     """Handle incoming Telegram webhook requests."""
 
