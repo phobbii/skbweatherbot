@@ -13,7 +13,6 @@ steps:
         --region $_REGION \
         --source $_SOURCE \
         --entry-point $_ENTRY_POINT \
-        --trigger-http \
         --allow-unauthenticated \
         --memory $_MEMORY \
         --max-instances $_MAX_INSTANCES \
