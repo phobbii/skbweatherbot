@@ -17,14 +17,7 @@ Telegram Server
       ↓
    ┌─────────────────────────────────┐
    │  Handler Registration (main.py) │
-   │  + Group chat filtering         │
    └─────────────────────────────────┘
-      ↓
-   ┌──────────────────────────────────────────────────┐
-   │  Filter: is_group_command / is_private_or_mentioned │
-   │  Private chat: allow all                          │
-   │  Group chat: only if @bot mentioned or replied to │
-   └──────────────────────────────────────────────────┘
       ↓
    ┌──────────────┬──────────────┬──────────────┐
    ↓              ↓              ↓              ↓
@@ -103,7 +96,6 @@ src/config.py
 │                     src/main.py                         │
 │  - Initializes bot, services, handlers                  │
 │  - Registers message handlers                           │
-│  - Group chat filtering (mention/reply detection)       │
 │  - webhook_run(): Cloud Functions entry point           │
 │  - local_run(): long polling for development            │
 └─────────────────────────────────────────────────────────┘
@@ -147,50 +139,36 @@ src/config.py
 
 ## Request Flow Examples
 
-### Example 1: User sends city name (private chat)
+### Example 1: User sends city name
 
 ```
 1. User: "Kyiv"
 2. Telegram → Webhook → Cloud Function → webhook_run(request)
 3. Validate POST method & X-Telegram-Bot-Api-Secret-Token
-4. src/main.py → is_private_or_mentioned() → True (private chat)
-5. weather_message() → MessageHandlers.handle_weather_request()
-6. MessageHandlers → WeatherService.get_current_weather(city="Kyiv")
-7. WeatherService → OpenWeatherMap API
-8. WeatherService → WeatherFormatter.format_current_weather()
-9. MessageHandlers → bot_helpers.reply_to_message()
-10. bot_helpers → send_with_retry() → bot.reply_to()
-11. Response sent to user
+4. src/main.py → weather_message() → MessageHandlers.handle_weather_request()
+5. MessageHandlers → WeatherService.get_current_weather(city="Kyiv")
+6. WeatherService → OpenWeatherMap API
+7. WeatherService → WeatherFormatter.format_current_weather()
+8. MessageHandlers → bot_helpers.reply_to_message()
+9. bot_helpers → send_with_retry() → bot.reply_to()
+10. Response sent to user
 ```
 
-### Example 2: User mentions bot in group chat
-
-```
-1. User in group: "@skbweatherbot Kyiv"
-2. Telegram → Webhook → Cloud Function → webhook_run(request)
-3. Validate POST method & secret token
-4. src/main.py → is_private_or_mentioned() → True (bot mentioned)
-5. weather_message() → strip "@skbweatherbot" → text becomes "Kyiv"
-6. MessageHandlers.handle_weather_request()
-7. Same flow as Example 1 from step 6
-```
-
-### Example 3: User clicks /start
+### Example 2: User clicks /start
 
 ```
 1. User: "/start"
 2. Telegram → Webhook → Cloud Function → webhook_run(request)
 3. Validate POST method & secret token
-4. src/main.py → is_group_command() → True (private chat)
-5. start_command() → CommandHandlers.handle_start()
-6. CommandHandlers → bot_helpers.create_inline_keyboard()
-7. CommandHandlers → bot_helpers.send_message()
-8. bot_helpers → send_with_retry() → bot.send_message()
-9. CommandHandlers → bot_helpers.send_sticker()
-10. Response sent to user
+4. src/main.py → start_command() → CommandHandlers.handle_start()
+5. CommandHandlers → bot_helpers.create_inline_keyboard()
+6. CommandHandlers → bot_helpers.send_message()
+7. bot_helpers → send_with_retry() → bot.send_message()
+8. CommandHandlers → bot_helpers.send_sticker()
+9. Response sent to user
 ```
 
-### Example 4: User clicks inline button
+### Example 3: User clicks inline button
 
 ```
 1. User: clicks "forecast" button
@@ -243,8 +221,6 @@ os.getenv("OWM_KEY")
 os.getenv("TELEBOT_KEY")
      ↓
 os.getenv("WEBHOOK_TOKEN")
-     ↓
-os.getenv("BOT_USERNAME", "skbweatherbot")
      ↓
 All config loaded
      ↓

@@ -37,7 +37,6 @@ Bot link: https://telegram.me/skbweatherbot
 - 5-day weather forecast
 - Automatic timezone detection
 - Inline keyboard navigation
-- Group chat support (responds only when mentioned or replied to)
 - Retry mechanism for API calls
 - Comprehensive error handling
 - Serverless deployment on Google Cloud Functions
@@ -60,7 +59,6 @@ Bot link: https://telegram.me/skbweatherbot
 | `OWM_KEY` | Local + Production | API key from [OpenWeatherMap](https://openweathermap.org/api) |
 | `TELEBOT_KEY` | Local + Production | Telegram Bot token from [@BotFather](https://t.me/BotFather) |
 | `WEBHOOK_TOKEN` | Production only | Secret token for webhook request validation |
-| `BOT_USERNAME` | Production only | Bot username without `@` (default: `skbweatherbot`). Used for group chat filtering |
 
 ### Local Development
 
@@ -71,7 +69,7 @@ export TELEBOT_KEY="your_telegram_bot_token"
 
 ### Production
 
-All four variables are required. Secrets (`OWM_KEY`, `TELEBOT_KEY`, `WEBHOOK_TOKEN`) are stored in GCP Secret Manager. `BOT_USERNAME` is set from the Cloud Build substitution variable `_NAME`.
+All three variables are required. Secrets are stored in GCP Secret Manager and injected during deployment.
 
 ## Running the Bot
 

@@ -13,7 +13,6 @@ from handlers.commands import CommandHandlers
 from handlers.messages import MessageHandlers
 from services.weather_service import WeatherService
 
-
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -30,57 +29,28 @@ msg_handlers = MessageHandlers(bot, weather_service)
 callback_handlers = CallbackHandlers(bot, cmd_handlers)
 
 
-def is_private(message: telebot.types.Message) -> bool:
-    """Check if message is from a private chat."""
-    return message.chat.type == 'private'
-
-
-def is_group_mention(message: telebot.types.Message) -> bool:
-    """Check if bot is mentioned or replied to in a group chat."""
-    if message.reply_to_message and message.reply_to_message.from_user and message.reply_to_message.from_user.username == config.BOT_USERNAME:
-        return True
-    if message.text and f'@{config.BOT_USERNAME}' in message.text:
-        return True
-    return False
-
-
-def is_private_or_mentioned(message: telebot.types.Message) -> bool:
-    """In private chats allow all messages; in groups only if bot is mentioned or replied to."""
-    return is_private(message) or is_group_mention(message)
-
-
-def is_group_command(message: telebot.types.Message) -> bool:
-    """Check if a command in a group is addressed to this bot (e.g. /help@skbweatherbot)."""
-    if is_private(message):
-        return True
-    if not message.text:
-        return False
-    cmd = message.text.split()[0]
-    return f'@{config.BOT_USERNAME}' in cmd
-
-
 # Register handlers
-@bot.message_handler(commands=['start'], func=is_group_command)
+@bot.message_handler(commands=['start'])
 def start_command(message: telebot.types.Message) -> None:
     cmd_handlers.handle_start(message)
 
 
-@bot.message_handler(commands=['location'], func=is_group_command)
+@bot.message_handler(commands=['location'])
 def location_command(message: telebot.types.Message) -> None:
     cmd_handlers.handle_location(message)
 
 
-@bot.message_handler(commands=['forecast'], func=is_group_command, content_types=config.CONTENT_TO_HANDLE)
+@bot.message_handler(commands=['forecast'], content_types=config.CONTENT_TO_HANDLE)
 def forecast_command(message: telebot.types.Message) -> None:
     cmd_handlers.handle_forecast_command(message)
 
 
-@bot.message_handler(commands=['help'], func=is_group_command)
+@bot.message_handler(commands=['help'])
 def help_command(message: telebot.types.Message) -> None:
     cmd_handlers.handle_help(message)
 
 
-@bot.message_handler(commands=['author'], func=is_group_command)
+@bot.message_handler(commands=['author'])
 def author_command(message: telebot.types.Message) -> None:
     cmd_handlers.handle_author(message)
 
@@ -90,14 +60,12 @@ def callback_query(callback: telebot.types.CallbackQuery) -> None:
     callback_handlers.handle_callback(callback)
 
 
-@bot.message_handler(func=is_private_or_mentioned, content_types=config.CONTENT_TO_HANDLE)
+@bot.message_handler(func=lambda m: True, content_types=config.CONTENT_TO_HANDLE)
 def weather_message(message: telebot.types.Message) -> None:
-    if message.text:
-        message.text = message.text.replace(f'@{config.BOT_USERNAME}', '').strip()
     msg_handlers.handle_weather_request(message)
 
 
-@bot.message_handler(func=is_private_or_mentioned, content_types=config.CONTENT_TO_REJECT)
+@bot.message_handler(func=lambda m: True, content_types=config.CONTENT_TO_REJECT)
 def wrong_content_message(message: telebot.types.Message) -> None:
     msg_handlers.handle_wrong_content(message)
 

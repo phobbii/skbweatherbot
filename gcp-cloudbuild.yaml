@@ -17,7 +17,7 @@ steps:
         --memory $_MEMORY \
         --max-instances $_MAX_INSTANCES \
         --concurrency $_CONCURRENCY \
-        --set-env-vars OWM_KEY=$$OWM_KEY,TELEBOT_KEY=$$TELEBOT_KEY,WEBHOOK_TOKEN=$$WEBHOOK_TOKEN,BOT_USERNAME=$_NAME
+        --set-env-vars OWM_KEY=$$OWM_KEY,TELEBOT_KEY=$$TELEBOT_KEY,WEBHOOK_TOKEN=$$WEBHOOK_TOKEN
 
 # Configure webhook
 - name: 'gcr.io/cloud-builders/gcloud'
