@@ -1,18 +1,19 @@
 """Base handler with common functionality."""
 import logging
 import random
-import time
 from typing import Optional, Union
 
 import telebot
 
-from config import ERROR_STICKERS
-from handlers.messages_text import (
-    AUTHOR_INFO,
-    MSG_SERVICE_UNAVAILABLE,
+from config import (
+    ERROR_STICKERS,
     STICKER_AUTHOR,
     STICKER_CITY_NOT_FOUND,
     STICKER_HELP,
+)
+from handlers.messages_text import (
+    AUTHOR_INFO,
+    MSG_SERVICE_UNAVAILABLE,
     get_city_not_found_message,
     get_help_message,
 )
@@ -50,7 +51,6 @@ class BaseHandler:
     ) -> None:
         """Send typing action, message, and optional sticker."""
         send_action(self.bot, chat_id, "typing")
-        time.sleep(1)
         send_message(self.bot, chat_id, text, **kwargs)
         if sticker_id:
             send_sticker(self.bot, chat_id, sticker_id)
@@ -68,7 +68,7 @@ class BaseHandler:
         self,
         chat_id: int,
         city_name: str,
-        keyboard,
+        keyboard: Optional[telebot.types.InlineKeyboardMarkup],
         instructions: tuple[str, ...] = (),
     ) -> None:
         """Send city-not-found message with configurable instructions."""

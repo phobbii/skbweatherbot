@@ -46,8 +46,10 @@ src/main.py
 ├── src/config.py (settings)
 ├── src/services/weather_service.py
 │   ├── src/config.py
+│   ├── src/services/weather_formatter.py
 │   └── src/utils/bot_helpers.py
 ├── src/handlers/commands.py
+│   ├── src/config.py (stickers)
 │   ├── src/handlers/base.py
 │   ├── src/handlers/messages_text.py
 │   ├── src/services/weather_service.py
@@ -58,6 +60,7 @@ src/main.py
 │   ├── src/services/weather_service.py
 │   └── src/utils/bot_helpers.py
 └── src/handlers/callbacks.py
+    ├── src/config.py (stickers)
     ├── src/handlers/base.py
     ├── src/handlers/messages_text.py
     └── src/utils/bot_helpers.py
@@ -66,15 +69,20 @@ src/handlers/messages_text.py
 └── (no dependencies - pure text templates)
 
 src/handlers/base.py
-├── src/config.py
-├── src/handlers/messages_text.py
+├── src/config.py (stickers + error stickers)
+├── src/handlers/messages_text.py (text templates)
 └── src/utils/bot_helpers.py
 
 src/utils/bot_helpers.py
 └── emoji, babel.dates (external libraries)
 
+src/services/weather_formatter.py
+├── src/config.py
+└── (no other dependencies)
+
 src/services/weather_service.py
 ├── src/config.py
+├── src/services/weather_formatter.py
 └── src/utils/bot_helpers.py
 
 src/config.py
@@ -101,30 +109,32 @@ src/config.py
 │+ mgr               │  │+ weather            │  │+ weather          │
 │+ geo_mgr           │  ├─────────────────────┤  ├───────────────────┤
 │+ tz_finder         │  │+ handle_start()     │  │+ handle_weather   │
-├────────────────────┤  │+ handle_location()  │  │  _request()       │
-│+ is_online()       │  │+ handle_forecast    │  │+ handle_wrong     │
-│+ get_current       │  │  _command()         │  │  _content()       │
-│  _weather()        │  │+ handle_forecast    │  └───────────────────┘
-│+ get_forecast()    │  │  _input()           │          │
-│+ format_current    │  │+ handle_help()      │          │
-│  _weather()        │  │+ handle_author()    │          │
-│+ format_forecast() │  └─────────────────────┘          │
-│+ icon_handler()    │          │                        │
+│+ formatter         │  │+ handle_location()  │  │  _request()       │
+├────────────────────┤  │+ handle_forecast    │  │+ handle_wrong     │
+│+ icon_handler()    │  │  _command()         │  │  _content()       │
+│+ get_current       │  │+ handle_forecast    │  └───────────────────┘
+│  _weather()        │  │  _input()           │          │
+│+ get_forecast()    │  │+ handle_help()      │          │
+│+ format_current    │  │+ handle_author()    │          │
+│  _weather()        │  └─────────────────────┘          │
+│+ format_forecast() │          │                        │
 │- _get_geo_info()   │          ↓                        ↓
 │- _resolve          │  ┌────────────────────┐  ┌───────────────────┐
 │  _timezone()       │  │ CallbackHandlers   │  │    BaseHandler    │
 │- _get_observation()│  ├────────────────────┤  ├───────────────────┤
 │- _get_forecaster() │  │+ bot               │  │+ bot              │
-│- _format_location  │  │+ command_handlers  │  ├───────────────────┤
-│  _header()         │  ├────────────────────┤  │+ send_response()  │
-│- _country_flag()   │  │+ handle_callback() │  │+ send_service     │
-└────────────────────┘  │- _DISPATCH (dict)  │  │  _unavailable()   │
-                        └────────────────────┘  │+ send_city        │
-                                ↑               │  _not_found()     │
-                                │               │+ send_help()      │
-                                └───────────────│+ send_author()    │
-                                                │+ get_username()   │
-                                                └───────────────────┘
+└────────────────────┘  │+ command_handlers  │  ├───────────────────┤
+                        ├────────────────────┤  │+ send_response()  │
+┌────────────────────┐  │+ handle_callback() │  │+ send_service     │
+│ WeatherFormatter   │  │- _DISPATCH (dict)  │  │  _unavailable()   │
+├────────────────────┤  └────────────────────┘  │+ send_city        │
+│+ format_current    │          ↑               │  _not_found()     │
+│  _weather()        │          │               │+ send_help()      │
+│+ format_forecast() │          └───────────────│+ send_author()    │
+│- _format_location  │                          │+ get_username()   │
+│  _header()         │                          └───────────────────┘
+│- _country_flag()   │
+└────────────────────┘
 ```
 
 ## Request Flow Examples
@@ -132,13 +142,13 @@ src/config.py
 ### Example 1: User sends city name
 
 ```
-1. User: "London"
+1. User: "Kyiv"
 2. Telegram → Webhook → Cloud Function → webhook_run(request)
 3. Validate POST method & X-Telegram-Bot-Api-Secret-Token
 4. src/main.py → weather_message() → MessageHandlers.handle_weather_request()
-5. MessageHandlers → WeatherService.get_current_weather(city="London")
+5. MessageHandlers → WeatherService.get_current_weather(city="Kyiv")
 6. WeatherService → OpenWeatherMap API
-7. WeatherService → format_current_weather()
+7. WeatherService → WeatherFormatter.format_current_weather()
 8. MessageHandlers → bot_helpers.reply_to_message()
 9. bot_helpers → send_with_retry() → bot.reply_to()
 10. Response sent to user
@@ -249,6 +259,6 @@ Bot live and receiving updates
 4. **Dependency Injection**: Services and handlers passed to constructors
 5. **Factory Pattern**: Keyboard creation functions
 6. **Retry Pattern**: Generic retry wrapper
-7. **Formatter Methods**: Dedicated formatting methods in WeatherService
+7. **Formatter Pattern**: Dedicated WeatherFormatter class for message formatting
 8. **Strategy Pattern**: Different handlers for different message types
 9. **Facade Pattern**: bot_helpers simplifies complex operations

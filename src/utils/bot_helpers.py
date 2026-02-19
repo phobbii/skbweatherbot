@@ -2,7 +2,7 @@
 import logging
 import time
 from datetime import date as date_type
-from typing import Any, Optional, Union
+from typing import Any, Callable, Optional, Union
 
 import emoji
 import telebot
@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 MessageOrCallback = Union[telebot.types.Message, telebot.types.CallbackQuery]
 
 
-def send_with_retry(func, *args, max_retries: int = 5, delay: int = 5, **kwargs) -> Any:
+def send_with_retry(func: Callable, *args, max_retries: int = 5, delay: int = 5, **kwargs) -> Any:
     """Generic retry wrapper for bot API calls."""
     for attempt in range(max_retries):
         try:

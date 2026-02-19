@@ -2,6 +2,8 @@
 """Main bot entry point."""
 import logging
 
+from typing import Any
+
 import functions_framework
 import telebot
 
@@ -69,7 +71,7 @@ def wrong_content_message(message: telebot.types.Message) -> None:
 
 
 @functions_framework.http
-def webhook_run(request):
+def webhook_run(request: Any) -> tuple[str, int]:
     """Handle incoming Telegram webhook requests."""
     if request.method != 'POST':
         logger.warning('Non-POST request received')

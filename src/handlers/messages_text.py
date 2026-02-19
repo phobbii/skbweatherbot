@@ -1,12 +1,6 @@
 """Message text constants for bot responses."""
 from typing import Sequence
 
-# Sticker IDs
-STICKER_HELP = 'CAADAgADxwIAAvnkbAABx601cOaIcf8WBA'
-STICKER_AUTHOR = 'CAADAgADtQEAAvnkbAABxHAP4NXF1FcWBA'
-STICKER_START = 'CAADAgADfQIAAvnkbAABcAABA648YQ08FgQ'
-STICKER_CITY_NOT_FOUND = 'CAADAgADegIAAvnkbAABGyiSVUu1QfIWBA'
-
 # Author information
 AUTHOR_INFO = (
     "\U0001F537 Author: <b>Yevhen Skyba</b>\n"
@@ -34,51 +28,41 @@ MSG_ENTER_CITY_OR_LOCATION = "{username}, введите город для по�
 MSG_SERVICE_UNAVAILABLE = "{username}, прошу прощения, в данный момент сервис погоды не доступен!\nПопробуйте позже\n"
 
 
-def _build_message(*parts: str) -> str:
-    """Concatenate message parts."""
-    return "".join(parts)
-
-
 def get_start_message(username: str) -> str:
     """Get start command message."""
-    return _build_message(
-        f"Привет {username}.\n",
+    return (
+        f"Привет {username}.\n"
         "\U0001F537 Введите город латиницей для получения погоды или\n"
-        "отправьте текущее местоположение - /location.\n",
-        INSTRUCTION_FORECAST,
-        INSTRUCTION_HELP,
-        INSTRUCTION_AUTHOR,
+        "отправьте текущее местоположение - /location.\n"
+        f"{INSTRUCTION_FORECAST}"
+        f"{INSTRUCTION_HELP}"
+        f"{INSTRUCTION_AUTHOR}"
     )
 
 
 def get_help_message(username: str) -> str:
     """Get help message."""
-    return _build_message(
-        MSG_ENTER_CITY_LATIN.format(username=username),
-        MSG_EXAMPLE_CITY,
-        INSTRUCTION_LOCATION,
-        INSTRUCTION_FORECAST,
-        INSTRUCTION_AUTHOR,
+    return (
+        f"{MSG_ENTER_CITY_LATIN.format(username=username)}"
+        f"{MSG_EXAMPLE_CITY}"
+        f"{INSTRUCTION_LOCATION}"
+        f"{INSTRUCTION_FORECAST}"
+        f"{INSTRUCTION_AUTHOR}"
     )
 
 
 def get_city_not_found_message(city: str, instructions: Sequence[str] = ()) -> str:
-    """Get city not found message with configurable instructions.
-
-    Args:
-        city: City name that was not found.
-        instructions: Instruction lines to append. Defaults to standard set.
-    """
+    """Get city not found message with configurable instructions."""
     if not instructions:
         instructions = (INSTRUCTION_LOCATION, INSTRUCTION_FORECAST, INSTRUCTION_HELP)
-    return _build_message(MSG_CITY_NOT_FOUND.format(city=city), *instructions)
+    return MSG_CITY_NOT_FOUND.format(city=city) + "".join(instructions)
 
 
 def get_forecast_help_message(username: str) -> str:
     """Get forecast help message."""
-    return _build_message(
-        MSG_ENTER_CITY_LATIN.format(username=username),
-        MSG_EXAMPLE_CITY,
-        INSTRUCTION_LOCATION_BUTTON,
-        INSTRUCTION_AUTHOR_BUTTON,
+    return (
+        f"{MSG_ENTER_CITY_LATIN.format(username=username)}"
+        f"{MSG_EXAMPLE_CITY}"
+        f"{INSTRUCTION_LOCATION_BUTTON}"
+        f"{INSTRUCTION_AUTHOR_BUTTON}"
     )

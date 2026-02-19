@@ -26,10 +26,6 @@ class MessageHandlers(BaseHandler):
         """Handle weather request by city name or shared location."""
         username = self.get_username(message)
 
-        if not self.weather.is_online():
-            self.send_service_unavailable(message.chat.id, username, reply_markup=remove_keyboard())
-            return
-
         keyboard = create_inline_keyboard(
             ("location", "location"),
             ("forecast", "forecast"),

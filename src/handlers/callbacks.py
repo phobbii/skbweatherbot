@@ -1,11 +1,11 @@
 """Callback query handlers for inline buttons."""
 import telebot
 
+from config import STICKER_HELP
 from handlers.base import BaseHandler
 from handlers.messages_text import (
     MSG_ENTER_CITY_OR_LOCATION,
     MSG_PRESS_LOCATION_BUTTON,
-    STICKER_HELP,
     get_forecast_help_message,
 )
 from utils.bot_helpers import create_inline_keyboard, create_location_keyboard
@@ -29,8 +29,6 @@ class CallbackHandlers(BaseHandler):
         handler = self._DISPATCH.get(callback.data)
         if handler:
             handler(self, chat_id, username, callback)
-
-    # --- individual callback handlers ---
 
     def _on_help(self, chat_id: int, username: str, _cb: telebot.types.CallbackQuery) -> None:
         self.send_help(chat_id, username)

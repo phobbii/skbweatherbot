@@ -1,13 +1,13 @@
 """Command handlers for the bot."""
 import telebot
 
+from config import STICKER_START
 from handlers.base import BaseHandler
 from handlers.messages_text import (
     INSTRUCTION_HELP_BUTTON,
     INSTRUCTION_LOCATION_BUTTON,
     MSG_ENTER_CITY_OR_LOCATION,
     MSG_PRESS_LOCATION_BUTTON,
-    STICKER_START,
     get_start_message,
 )
 from services.weather_service import WeatherService
@@ -61,11 +61,6 @@ class CommandHandlers(BaseHandler):
     def handle_forecast_input(self, message: telebot.types.Message) -> None:
         """Handle forecast input (city name or shared location)."""
         username = self.get_username(message)
-
-        if not self.weather.is_online():
-            self.send_service_unavailable(message.chat.id, username, reply_markup=remove_keyboard())
-            return
-
         keyboard = create_inline_keyboard(("help", "forecast_help"))
 
         if message.location:
@@ -76,9 +71,7 @@ class CommandHandlers(BaseHandler):
         if not forecast_data:
             city_name = message.text.capitalize() if message.text else "..."
             self.send_city_not_found(
-                message.chat.id,
-                city_name,
-                keyboard,
+                message.chat.id, city_name, keyboard,
                 instructions=(INSTRUCTION_LOCATION_BUTTON, INSTRUCTION_HELP_BUTTON),
             )
             self.bot.register_next_step_handler(message, self.handle_forecast_input)

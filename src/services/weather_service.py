@@ -1,4 +1,4 @@
-"""Weather service for fetching and formatting weather data."""
+"""Weather service for fetching weather data from OpenWeatherMap API."""
 import datetime
 import logging
 import re
@@ -8,9 +8,12 @@ from typing import Optional
 import pytz
 from pyowm.owm import OWM
 from pyowm.utils.config import get_default_config
+from pyowm.weatherapi30.forecaster import Forecaster
+from pyowm.weatherapi30.observation import Observation
 from timezonefinder import TimezoneFinder
 
-from config import DEGREE_SIGN, FORECAST_INTERVAL, LOCALE
+from config import FORECAST_INTERVAL, LOCALE
+from services.weather_formatter import WeatherFormatter
 from utils.bot_helpers import format_localized_weekday
 
 logger = logging.getLogger(__name__)
@@ -28,7 +31,7 @@ _HPA_TO_MMHG = 0.75
 
 
 class WeatherService:
-    """Service for weather operations using OpenWeatherMap API."""
+    """Service for weather data operations using OpenWeatherMap API."""
 
     def __init__(self, api_key: str) -> None:
         """Initialize weather service with API key."""
@@ -38,6 +41,7 @@ class WeatherService:
         self.mgr = self.owm.weather_manager()
         self.geo_mgr = self.owm.geocoding_manager()
         self.tz_finder = TimezoneFinder()
+        self.formatter = WeatherFormatter()
 
     @staticmethod
     def icon_handler(icon: str) -> str:
@@ -45,19 +49,6 @@ class WeatherService:
         if '01' not in icon:
             icon = re.sub(r'\D', '', icon)
         return _ICON_MAP.get(icon, '')
-
-    @staticmethod
-    def _country_flag(country_code: str) -> str:
-        """Convert country code (e.g. 'UA') to flag emoji."""
-        return ''.join(chr(0x1F1E6 + ord(c) - ord('A')) for c in country_code.upper())
-
-    def is_online(self) -> bool:
-        """Check if OWM API is online."""
-        try:
-            self.mgr.weather_at_place('London,GB')
-            return True
-        except Exception:
-            return False
 
     def _get_geo_info(self, lat: float, lon: float) -> dict[str, str]:
         """Get country code and state via reverse geocoding API."""
@@ -86,7 +77,7 @@ class WeatherService:
         city: Optional[str] = None,
         lat: Optional[float] = None,
         lon: Optional[float] = None,
-    ):
+    ) -> Optional[Observation]:
         """Get weather observation by city or coordinates."""
         if lat is not None and lon is not None:
             return self.mgr.weather_at_coords(lat, lon)
@@ -99,7 +90,7 @@ class WeatherService:
         city: Optional[str] = None,
         lat: Optional[float] = None,
         lon: Optional[float] = None,
-    ):
+    ) -> Optional[Forecaster]:
         """Get forecast by city or coordinates."""
         if lat is not None and lon is not None:
             return self.mgr.forecast_at_coords(lat, lon, FORECAST_INTERVAL)
@@ -205,55 +196,10 @@ class WeatherService:
             logger.error(f'Error fetching forecast: {e}')
             return None
 
-    def _format_location_header(self, username: str, data: dict, trailing_newline: bool = True) -> str:
-        """Format the common location header for weather messages.
-
-        Args:
-            trailing_newline: If True, adds an extra blank line after the header.
-        """
-        lines = [f"{username}, в <b>{data['location_name']}</b>\n"]
-        if data.get('state'):
-            lines.append(f"\U0001F5FA <i>Регион:</i> <b>{data['state']}</b>")
-        if data.get('country'):
-            flag = self._country_flag(data['country'])
-            lines.append(f"{flag} <i>Код страны:</i> <b>{data['country']}</b>")
-        lines.append(f"\U0001F30D <i>Часовой пояс:</i> <b>{data['timezone']}</b>")
-        result = '\n'.join(lines) + '\n'
-        if trailing_newline:
-            result += '\n'
-        return result
-
     def format_current_weather(self, username: str, data: dict) -> str:
-        """Format current weather data as message."""
-        header = self._format_location_header(username, data, trailing_newline=False)
-        return (
-            f"{header}"
-            f"\U0001F4C5 <i>Дата:</i> <b>{data['date']}</b>\n"
-            f"\U000023F0 <i>Текущее время:</i> <b>{data['time']}</b>\n"
-            f"{data['icon']} <i>Статус:</i> <b>{data['status'].capitalize()}</b>\n"
-            f"\U0001F321 <i>Температура воздуха:</i> <b>{data['temp']} {DEGREE_SIGN}C</b>\n"
-            f"\U0001F4CA <i>Давление:</i> <b>{data['pressure']} мм</b>\n"
-            f"\U0001F4A7 <i>Влажность:</i> <b>{data['humidity']} %</b>\n"
-            f"\U0001F4A8 <i>Скорость ветра:</i> <b>{data['wind_speed']} м/c</b>\n\n"
-        )
+        """Format current weather data as message. Delegates to WeatherFormatter."""
+        return self.formatter.format_current_weather(username, data)
 
     def format_forecast(self, username: str, data: dict) -> str:
-        """Format forecast data as message."""
-        answer = self._format_location_header(username, data)
-        for day in data['forecasts']:
-            if day['temp_min'] == day['temp_max']:
-                temp_label = 'Средняя температура воздуха'
-                temp_str = str(day['temp_min'])
-            else:
-                temp_label = 'Температура воздуха'
-                temp_str = f"{day['temp_min']}...{day['temp_max']}"
-
-            answer += (
-                f"\U0001F4C5 <i>Дата:</i> <b>{day['date']}</b>\n"
-                f"{day['icon']} <i>Статус:</i> <b>{day['status'].capitalize()}</b>\n"
-                f"\U0001F321 <i>{temp_label}:</i> <b>{temp_str} {DEGREE_SIGN}C</b>\n"
-                f"\U0001F4CA <i>Давление:</i> <b>{day['pressure_avg']} мм</b>\n"
-                f"\U0001F4A7 <i>Влажность:</i> <b>{day['humidity_avg']} %</b>\n"
-                f"\U0001F4A8 <i>Скорость ветра:</i> <b>{day['wind_speed_avg']} м/c</b>\n\n"
-            )
-        return answer
+        """Format forecast data as message. Delegates to WeatherFormatter."""
+        return self.formatter.format_forecast(username, data)
