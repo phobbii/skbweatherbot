@@ -63,3 +63,6 @@ DEGREE_SIGN = '\N{DEGREE SIGN}'
 
 # Locale setting
 LOCALE = 'ru'
+
+# Forecast interval ('3h' for free)
+FORECAST_INTERVAL = '3h'

@@ -1,4 +1,4 @@
-pyowm==2.10.0
+pyowm==3.5.0
 pyTelegramBotAPI==4.2.0
 pytz>=2024.2
 timezonefinder==8.2.0
