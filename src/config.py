@@ -64,6 +64,9 @@ WRONG_CONTENT_STICKERS = [
     'CAADAgADNAEAAvnkbAABdiR2Dg6Dxc8WBA',
 ]
 
+# Bot username (without @) for group chat filtering
+BOT_USERNAME = os.getenv('BOT_USERNAME', 'skbweatherbot')
+
 # Unicode symbols
 DEGREE_SIGN = '\N{DEGREE SIGN}'
 

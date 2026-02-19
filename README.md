@@ -39,6 +39,7 @@ Bot link: https://telegram.me/skbweatherbot
 - Inline keyboard navigation
 - Retry mechanism for API calls
 - Comprehensive error handling
+- Group chat support (responds only when mentioned or replied to)
 - Serverless deployment on Google Cloud Functions
 
 ## Requirements
@@ -59,6 +60,7 @@ Bot link: https://telegram.me/skbweatherbot
 | `OWM_KEY` | Local + Production | API key from [OpenWeatherMap](https://openweathermap.org/api) |
 | `TELEBOT_KEY` | Local + Production | Telegram Bot token from [@BotFather](https://t.me/BotFather) |
 | `WEBHOOK_TOKEN` | Production only | Secret token for webhook request validation |
+| `BOT_USERNAME` | Optional | Bot username without `@` (default: `skbweatherbot`) |
 
 ### Local Development
 

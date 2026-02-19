@@ -96,6 +96,7 @@ src/config.py
 │                     src/main.py                         │
 │  - Initializes bot, services, handlers                  │
 │  - Registers message handlers                           │
+│  - is_private_or_mentioned(): group chat filter          │
 │  - webhook_run(): Cloud Functions entry point           │
 │  - local_run(): long polling for development            │
 └─────────────────────────────────────────────────────────┘
@@ -142,16 +143,17 @@ src/config.py
 ### Example 1: User sends city name
 
 ```
-1. User: "Kyiv"
+1. User: "Kyiv" (in DM) or "Kyiv @bot" / reply to bot (in group)
 2. Telegram → Webhook → Cloud Function → webhook_run(request)
 3. Validate POST method & X-Telegram-Bot-Api-Secret-Token
-4. src/main.py → weather_message() → MessageHandlers.handle_weather_request()
-5. MessageHandlers → WeatherService.get_current_weather(city="Kyiv")
-6. WeatherService → OpenWeatherMap API
-7. WeatherService → WeatherFormatter.format_current_weather()
-8. MessageHandlers → bot_helpers.reply_to_message()
-9. bot_helpers → send_with_retry() → bot.reply_to()
-10. Response sent to user
+4. src/main.py → is_private_or_mentioned() filter
+5. src/main.py → weather_message() → strip @mention → MessageHandlers.handle_weather_request()
+6. MessageHandlers → WeatherService.get_current_weather(city="Kyiv")
+7. WeatherService → OpenWeatherMap API
+8. WeatherService → WeatherFormatter.format_current_weather()
+9. MessageHandlers → bot_helpers.reply_to_message()
+10. bot_helpers → send_with_retry() → bot.reply_to()
+11. Response sent to user
 ```
 
 ### Example 2: User clicks /start
@@ -222,6 +224,8 @@ os.getenv("TELEBOT_KEY")
      ↓
 os.getenv("WEBHOOK_TOKEN")
      ↓
+os.getenv("BOT_USERNAME") (default: "skbweatherbot")
+     ↓
 All config loaded
      ↓
 src/main.py imports config
@@ -262,3 +266,4 @@ Bot live and receiving updates
 7. **Formatter Pattern**: Dedicated WeatherFormatter class for message formatting
 8. **Strategy Pattern**: Different handlers for different message types
 9. **Facade Pattern**: bot_helpers simplifies complex operations
+10. **Guard Pattern**: `is_private_or_mentioned()` filters messages in group chats

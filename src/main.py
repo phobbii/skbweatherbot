@@ -13,6 +13,7 @@ from handlers.commands import CommandHandlers
 from handlers.messages import MessageHandlers
 from services.weather_service import WeatherService
 
+
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -27,6 +28,17 @@ weather_service = WeatherService(config.OWM_KEY)
 cmd_handlers = CommandHandlers(bot, weather_service)
 msg_handlers = MessageHandlers(bot, weather_service)
 callback_handlers = CallbackHandlers(bot, cmd_handlers)
+
+
+def is_private_or_mentioned(message: telebot.types.Message) -> bool:
+    """In private chats allow all messages; in groups only if bot is mentioned or replied to."""
+    if message.chat.type == 'private':
+        return True
+    if message.reply_to_message and message.reply_to_message.from_user and message.reply_to_message.from_user.username == config.BOT_USERNAME:
+        return True
+    if message.text and f'@{config.BOT_USERNAME}' in message.text:
+        return True
+    return False
 
 
 # Register handlers
@@ -60,12 +72,14 @@ def callback_query(callback: telebot.types.CallbackQuery) -> None:
     callback_handlers.handle_callback(callback)
 
 
-@bot.message_handler(func=lambda m: True, content_types=config.CONTENT_TO_HANDLE)
+@bot.message_handler(func=is_private_or_mentioned, content_types=config.CONTENT_TO_HANDLE)
 def weather_message(message: telebot.types.Message) -> None:
+    if message.text:
+        message.text = message.text.replace(f'@{config.BOT_USERNAME}', '').strip()
     msg_handlers.handle_weather_request(message)
 
 
-@bot.message_handler(func=lambda m: True, content_types=config.CONTENT_TO_REJECT)
+@bot.message_handler(func=is_private_or_mentioned, content_types=config.CONTENT_TO_REJECT)
 def wrong_content_message(message: telebot.types.Message) -> None:
     msg_handlers.handle_wrong_content(message)
 
