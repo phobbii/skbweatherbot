@@ -5,9 +5,9 @@ import telebot
 from utils.bot_helpers import send_action, send_message, send_sticker, get_username, create_inline_keyboard, remove_keyboard
 from config import ERROR_STICKERS
 from handlers.messages_text import (
-    MSG_SERVICE_UNAVAILABLE, STICKER_CITY_NOT_FOUND, STICKER_CYRILLIC_ERROR,
+    MSG_SERVICE_UNAVAILABLE, STICKER_CITY_NOT_FOUND,
     AUTHOR_INFO, STICKER_AUTHOR, STICKER_HELP,
-    get_city_not_found_message, get_cyrillic_error_message, get_help_message
+    get_city_not_found_message, get_help_message
 )
 
 
@@ -35,12 +35,7 @@ class BaseHandler:
         """Send city not found message."""
         self.send_response(chat_id, get_city_not_found_message(city_name), STICKER_CITY_NOT_FOUND, 
                           reply_markup=keyboard, parse_mode='HTML')
-    
-    def send_cyrillic_error(self, chat_id: int, username: str, keyboard) -> None:
-        """Send Cyrillic input error message."""
-        self.send_response(chat_id, get_cyrillic_error_message(username.title()), STICKER_CYRILLIC_ERROR, 
-                          reply_markup=keyboard)
-    
+
     def send_help(self, chat_id: int, username: str) -> None:
         """Send help message."""
         keyboard = create_inline_keyboard(
