@@ -2,12 +2,13 @@
 import re
 import datetime
 import pytz
-import pyowm
+from pyowm.owm import OWM
+from pyowm.utils.config import get_default_config
 from timezonefinder import TimezoneFinder
 from collections import defaultdict, Counter
 from typing import Optional
 import logging
-from config import DEGREE_SIGN, LOCALE
+from config import DEGREE_SIGN, LOCALE, FORECAST_INTERVAL
 from utils.bot_helpers import format_localized_weekday
 
 logger = logging.getLogger(__name__)
@@ -18,12 +19,20 @@ class WeatherService:
     
     def __init__(self, api_key: str):
         """Initialize weather service with API key."""
-        self.owm = pyowm.OWM(API_key=api_key, language=LOCALE)
+        config = get_default_config()
+        config['language'] = LOCALE
+        self.owm = OWM(api_key, config)
+        self.mgr = self.owm.weather_manager()
+        self.geo_mgr = self.owm.geocoding_manager()
         self.tz_finder = TimezoneFinder()
     
     def is_online(self) -> bool:
         """Check if OWM API is online."""
-        return self.owm.is_API_online()
+        try:
+            self.mgr.weather_at_place('London,GB')
+            return True
+        except Exception:
+            return False
     
     @staticmethod
     def icon_handler(icon: str) -> str:
@@ -38,6 +47,21 @@ class WeatherService:
         }
         return icons.get(icon, '')
     
+    def _get_geo_info(self, lat: float, lon: float) -> dict:
+        """Get country code and state via reverse geocoding API."""
+        try:
+            _, json_data = self.geo_mgr.http_client.get_json(
+                'reverse', params={'lat': lat, 'lon': lon, 'limit': 1}
+            )
+            if json_data:
+                return {
+                    'country': json_data[0].get('country', ''),
+                    'state': json_data[0].get('state', '')
+                }
+        except Exception as e:
+            logger.error(f'Error fetching geo info: {e}')
+        return {'country': '', 'state': ''}
+    
     def get_current_weather(
         self,
         city: Optional[str] = None,
@@ -47,18 +71,17 @@ class WeatherService:
 
         try:
             if lat is not None and lon is not None:
-                observation = self.owm.weather_at_coords(lat, lon)
+                observation = self.mgr.weather_at_coords(lat, lon)
             elif city:
-                observation = self.owm.weather_at_place(city)
+                observation = self.mgr.weather_at_place(city)
             else:
                 return None
 
-            location = observation.get_location()
-            weather = observation.get_weather()
+            location = observation.location
+            weather = observation.weather
 
             timezone_str = self.tz_finder.timezone_at(
-                lng=location.get_lon(),
-                lat=location.get_lat()
+                lng=location.lon, lat=location.lat
             )
 
             timezone = pytz.timezone(timezone_str) if timezone_str else pytz.utc
@@ -70,14 +93,18 @@ class WeatherService:
             day = local_time.date()
             formatted_date = format_localized_weekday(day, LOCALE)
 
+            geo_info = self._get_geo_info(location.lat, location.lon)
+
             return {
-                'location_name': location.get_name(),
-                'icon': self.icon_handler(weather.get_weather_icon_name()),
-                'status': weather.get_detailed_status(),
-                'temp': round(weather.get_temperature('celsius')['temp']),
-                'pressure': round(weather.get_pressure()['press'] * 0.75),
-                'humidity': weather.get_humidity(),
-                'wind_speed': round(weather.get_wind()['speed']),
+                'location_name': location.name,
+                'country': geo_info['country'],
+                'state': geo_info['state'],
+                'icon': self.icon_handler(weather.weather_icon_name),
+                'status': weather.detailed_status,
+                'temp': round(weather.temperature('celsius')['temp']),
+                'pressure': round(weather.barometric_pressure()['press'] * 0.75),
+                'humidity': weather.humidity,
+                'wind_speed': round(weather.wind()['speed']),
                 'timezone': timezone_str,
                 'date': formatted_date.capitalize(),
                 'time': local_time.strftime('%H:%M:%S')
@@ -96,41 +123,44 @@ class WeatherService:
 
         try:
             if lat is not None and lon is not None:
-                forecast = self.owm.three_hours_forecast_at_coords(lat, lon)
+                forecaster = self.mgr.forecast_at_coords(lat, lon, FORECAST_INTERVAL)
             elif city:
-                forecast = self.owm.three_hours_forecast(city)
+                forecaster = self.mgr.forecast_at_place(city, FORECAST_INTERVAL)
             else:
                 return None
 
-            location = forecast.get_forecast().get_location()
+            if forecaster is None:
+                return None
+
+            fc = forecaster.forecast
+            location = fc.location
 
             timezone_str = self.tz_finder.timezone_at(
-                lng=location.get_lon(),
-                lat=location.get_lat()
+                lng=location.lon, lat=location.lat
             )
 
             timezone = pytz.timezone(timezone_str) if timezone_str else pytz.utc
             timezone_str = timezone_str or 'UTC'
 
+            geo_info = self._get_geo_info(location.lat, location.lon)
+
             daily_data = defaultdict(list)
 
-            for weather_obj in forecast.get_forecast():
+            for weather_obj in fc:
                 dt_local = datetime.datetime.fromtimestamp(
-                    weather_obj.get_reference_time(),
+                    weather_obj.reference_time(),
                     tz=timezone
                 )
 
                 day = dt_local.date()
 
                 daily_data[day].append({
-                    'temp': weather_obj.get_temperature('celsius')['temp'],
-                    'humidity': weather_obj.get_humidity(),
-                    'pressure': weather_obj.get_pressure()['press'] * 0.75,
-                    'wind_speed': weather_obj.get_wind()['speed'],
-                    'status': weather_obj.get_detailed_status(),
-                    'icon': self.icon_handler(
-                        weather_obj.get_weather_icon_name()
-                    )
+                    'temp': weather_obj.temperature('celsius')['temp'],
+                    'humidity': weather_obj.humidity,
+                    'pressure': weather_obj.barometric_pressure()['press'] * 0.75,
+                    'wind_speed': weather_obj.wind()['speed'],
+                    'status': weather_obj.detailed_status,
+                    'icon': self.icon_handler(weather_obj.weather_icon_name)
                 })
 
             forecasts = []
@@ -158,7 +188,9 @@ class WeatherService:
                 })
 
             return {
-                'location_name': location.get_name(),
+                'location_name': location.name,
+                'country': geo_info['country'],
+                'state': geo_info['state'],
                 'timezone': timezone_str,
                 'forecasts': forecasts
             }
@@ -170,7 +202,14 @@ class WeatherService:
     @staticmethod
     def format_current_weather(username: str, weather_data: dict) -> str:
         """Format current weather data as message."""
-        answer = f"{username}, в <b>{weather_data['location_name']}</b>\n\n"
+        location_parts = [weather_data['location_name']]
+        if weather_data.get('state'):
+            location_parts.append(weather_data['state'])
+        if weather_data.get('country'):
+            location_parts.append(weather_data['country'])
+        location_str = ', '.join(location_parts)
+
+        answer = f"{username}, в <b>{location_str}</b>\n\n"
         answer += f"\U0001F30D <i>Часовой пояс:</i> <b>{weather_data['timezone']}</b>\n"
         answer += f"\U0001F4C5 <i>Дата:</i> <b>{weather_data['date']}</b>\n"
         answer += f"\U000023F0 <i>Текущее время:</i> <b>{weather_data['time']}</b>\n"
@@ -185,7 +224,14 @@ class WeatherService:
     @staticmethod
     def format_forecast(username: str, forecast_data: dict) -> str:
         """Format forecast data as message."""
-        answer = f"{username}, в <b>{forecast_data['location_name']}</b>\n"
+        location_parts = [forecast_data['location_name']]
+        if forecast_data.get('state'):
+            location_parts.append(forecast_data['state'])
+        if forecast_data.get('country'):
+            location_parts.append(forecast_data['country'])
+        location_str = ', '.join(location_parts)
+
+        answer = f"{username}, в <b>{location_str}</b>\n"
         answer += f"\U0001F30D <i>Часовой пояс:</i> <b>{forecast_data['timezone']}</b>\n\n"
 
         for day in forecast_data['forecasts']:
