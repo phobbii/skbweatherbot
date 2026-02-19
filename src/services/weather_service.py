@@ -18,7 +18,7 @@ class WeatherService:
     
     def __init__(self, api_key: str):
         """Initialize weather service with API key."""
-        self.owm = pyowm.OWM(API_key=api_key, language='ru')
+        self.owm = pyowm.OWM(API_key=api_key, language=LOCALE)
         self.tz_finder = TimezoneFinder()
     
     def is_online(self) -> bool:
