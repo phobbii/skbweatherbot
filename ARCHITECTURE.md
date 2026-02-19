@@ -114,10 +114,9 @@ src/config.py
                   └────────────────┘  │+ send_service │
                           ↑           │  _unavailable │
                           │           │+ send_city_   │
-                          │           │  not_found    │
-                          └───────────│+ send_cyrillic│
-                                      │  _error       │
+                          └───────────│  not_found    │
                                       └───────────────┘
+                                      
 ```
 
 ## Request Flow Examples
