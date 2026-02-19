@@ -200,16 +200,19 @@ class WeatherService:
             return None
     
     @staticmethod
+    def _country_flag(country_code: str) -> str:
+        """Convert country code (e.g. 'UA') to flag emoji."""
+        return ''.join(chr(0x1F1E6 + ord(c) - ord('A')) for c in country_code.upper())
+
+    @staticmethod
     def format_current_weather(username: str, weather_data: dict) -> str:
         """Format current weather data as message."""
-        location_parts = [weather_data['location_name']]
+        answer = f"{username}, в <b>{weather_data['location_name']}</b>\n\n"
         if weather_data.get('state'):
-            location_parts.append(weather_data['state'])
+            answer += f"\U0001F3F7 <i>Область:</i> <b>{weather_data['state']}</b>\n"
         if weather_data.get('country'):
-            location_parts.append(weather_data['country'])
-        location_str = ', '.join(location_parts)
-
-        answer = f"{username}, в <b>{location_str}</b>\n\n"
+            flag = WeatherService._country_flag(weather_data['country'])
+            answer += f"{flag} <i>Страна:</i> <b>{weather_data['country']}</b>\n"
         answer += f"\U0001F30D <i>Часовой пояс:</i> <b>{weather_data['timezone']}</b>\n"
         answer += f"\U0001F4C5 <i>Дата:</i> <b>{weather_data['date']}</b>\n"
         answer += f"\U000023F0 <i>Текущее время:</i> <b>{weather_data['time']}</b>\n"
@@ -224,14 +227,12 @@ class WeatherService:
     @staticmethod
     def format_forecast(username: str, forecast_data: dict) -> str:
         """Format forecast data as message."""
-        location_parts = [forecast_data['location_name']]
+        answer = f"{username}, в <b>{forecast_data['location_name']}</b>\n\n"
         if forecast_data.get('state'):
-            location_parts.append(forecast_data['state'])
+            answer += f"\U0001F3F7 <i>Область:</i> <b>{forecast_data['state']}</b>\n"
         if forecast_data.get('country'):
-            location_parts.append(forecast_data['country'])
-        location_str = ', '.join(location_parts)
-
-        answer = f"{username}, в <b>{location_str}</b>\n"
+            flag = WeatherService._country_flag(forecast_data['country'])
+            answer += f"{flag} <i>Страна:</i> <b>{forecast_data['country']}</b>\n"
         answer += f"\U0001F30D <i>Часовой пояс:</i> <b>{forecast_data['timezone']}</b>\n\n"
 
         for day in forecast_data['forecasts']:

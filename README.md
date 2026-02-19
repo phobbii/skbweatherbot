@@ -24,10 +24,10 @@ Bot link: https://telegram.me/skbweatherbot
     │   └── callbacks.py            # Inline button callback handlers
     ├── services/                   # Business logic
     │   ├── __init__.py
-    │   └── weather_service.py      # Weather API integration
+    │   └── weather_service.py      # Weather API integration & geo info (country, state)
     └── utils/                      # Helper functions
         ├── __init__.py
-        └── bot_helpers.py          # Bot utility functions (retry, keyboards, etc.)
+        └── bot_helpers.py          # Bot utility functions (retry, keyboards, emoji, localization)
 ```
 
 ## Features
@@ -105,7 +105,7 @@ Cloud Build substitution variables:
 | `_ENTRY_POINT` | `webhook_run` |
 | `_SOURCE` | `./src/` |
 | `_MEMORY` | `512MB` |
-| `_MAX_INSTANCES` | `3` |
+| `_MAX_INSTANCES` | `1` |
 | `_CONCURRENCY` | `1` |
 
 ## Bot Commands

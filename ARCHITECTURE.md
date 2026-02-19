@@ -68,10 +68,11 @@ src/handlers/base.py
 └── src/config.py
 
 src/utils/bot_helpers.py
-└── (no dependencies - pure utilities)
+└── emoji, babel.dates (external libraries)
 
 src/services/weather_service.py
 └── src/config.py
+└── src/utils/bot_helpers.py
 
 src/config.py
 └── (no dependencies - pure configuration)
@@ -94,14 +95,16 @@ src/config.py
 │WeatherService│  │CommandHandlers│  │MessageHandlers│
 ├──────────────┤  ├───────────────┤  ├───────────────┤
 │+ owm         │  │+ bot          │  │+ bot          │
+│+ geo_mgr     │  │+ weather      │  │+ weather      │
 │+ tz_finder   │  │+ weather      │  │+ weather      │
 ├──────────────┤  ├───────────────┤  ├───────────────┤
 │+ is_online() │  │+ handle_start │  │+ handle_      │
 │+ get_current │  │+ handle_help  │  │  weather_req  │
 │+ get_forecast│  │+ handle_      │  │+ handle_wrong │
 │+ format_*()  │  │  forecast     │  │  _content     │
-└──────────────┘  └───────────────┘  └───────────────┘
-                          │                 │
+│+_get_geo_info│  └───────────────┘  └───────────────┘
+│+_country_flag│          │                 │
+└──────────────┘          │                 │
                           ↓                 ↓
                   ┌────────────────┐  ┌───────────────┐
                   │CallbackHandlers│  │  BaseHandler  │
