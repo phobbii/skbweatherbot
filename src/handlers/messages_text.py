@@ -5,7 +5,6 @@ STICKER_HELP = 'CAADAgADxwIAAvnkbAABx601cOaIcf8WBA'
 STICKER_AUTHOR = 'CAADAgADtQEAAvnkbAABxHAP4NXF1FcWBA'
 STICKER_START = 'CAADAgADfQIAAvnkbAABcAABA648YQ08FgQ'
 STICKER_CITY_NOT_FOUND = 'CAADAgADegIAAvnkbAABGyiSVUu1QfIWBA'
-STICKER_CYRILLIC_ERROR = 'CAADAgADewIAAvnkbAABeDnKq9BHIbAWBA'
 
 # Author information
 AUTHOR_INFO = (
@@ -56,16 +55,6 @@ def get_help_message(username: str) -> str:
         f"{INSTRUCTION_AUTHOR}"
     )
 
-# Cyrillic error message
-def get_cyrillic_error_message(username: str) -> str:
-    """Get Cyrillic input error message."""
-    return (
-        f"{username}, пожалуйста введите название города латиницей.\n"
-        f"{INSTRUCTION_LOCATION}"
-        f"{INSTRUCTION_FORECAST}"
-        f"{INSTRUCTION_HELP}"
-    )
-
 # City not found message
 def get_city_not_found_message(city: str) -> str:
     """Get city not found message."""
@@ -86,15 +75,7 @@ def get_forecast_help_message(username: str) -> str:
         f"{INSTRUCTION_AUTHOR_BUTTON}"
     )
 
-# Forecast error messages
-def get_forecast_cyrillic_error(username: str) -> str:
-    """Get forecast Cyrillic error message."""
-    return (
-        f"{username}, пожалуйста введите название города латиницей.\n"
-        f"{INSTRUCTION_LOCATION_BUTTON}"
-        f"{INSTRUCTION_HELP_BUTTON}"
-    )
-
+# Forecast city not found message
 def get_forecast_city_not_found(city: str) -> str:
     """Get forecast city not found message."""
     return (

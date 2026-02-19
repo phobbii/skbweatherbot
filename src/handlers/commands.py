@@ -6,7 +6,7 @@ from services.weather_service import WeatherService
 from handlers.base import BaseHandler
 from handlers.messages_text import (
     STICKER_START, MSG_PRESS_LOCATION_BUTTON, MSG_ENTER_CITY_OR_LOCATION,
-    get_start_message, get_forecast_cyrillic_error, get_forecast_city_not_found
+    get_start_message, get_forecast_city_not_found
 )
 
 
@@ -51,13 +51,6 @@ class CommandHandlers(BaseHandler):
             return
         
         keyboard = create_inline_keyboard(("help", "forecast_help"))
-        
-        # Check for Cyrillic
-        if message.text and re.search(r'[\u0400-\u04FF]', message.text):
-            self.send_response(message.chat.id, get_forecast_cyrillic_error(username.title()), 
-                             'CAADAgADewIAAvnkbAABeDnKq9BHIbAWBA', reply_markup=keyboard)
-            self.bot.register_next_step_handler(message, self.handle_forecast_input)
-            return
         
         # Get forecast
         if message.location:

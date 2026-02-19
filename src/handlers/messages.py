@@ -29,11 +29,6 @@ class MessageHandlers(BaseHandler):
             ("forecast", "forecast"),
             ("help", "help")
         )
-        
-        # Check for Cyrillic
-        if message.text and re.search(r'[\u0400-\u04FF]', message.text):
-            self.send_cyrillic_error(message.chat.id, username, keyboard)
-            return
 
         # Check for emoji in text
         if message.text and is_emoji(message.text):
