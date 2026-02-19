@@ -1,19 +1,21 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """Main bot entry point."""
 import logging
-import telebot
+
+from typing import Any
+
 import functions_framework
+import telebot
+
 import config
-from services.weather_service import WeatherService
+from handlers.callbacks import CallbackHandlers
 from handlers.commands import CommandHandlers
 from handlers.messages import MessageHandlers
-from handlers.callbacks import CallbackHandlers
+from services.weather_service import WeatherService
 
-# Setup logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
 )
 logger = logging.getLogger(__name__)
 
@@ -69,9 +71,8 @@ def wrong_content_message(message: telebot.types.Message) -> None:
 
 
 @functions_framework.http
-def webhook_run(request):
+def webhook_run(request: Any) -> tuple[str, int]:
     """Handle incoming Telegram webhook requests."""
-
     if request.method != 'POST':
         logger.warning('Non-POST request received')
         return 'Method Not Allowed', 405
@@ -83,38 +84,29 @@ def webhook_run(request):
 
     try:
         body = request.get_json(silent=True)
-
         if not body:
             logger.warning('Empty request body')
             return 'Bad Request', 400
 
         update = telebot.types.Update.de_json(body)
-
         logger.info(
             f'Update received: id={update.update_id}, '
             f'type={"message" if update.message else "callback" if update.callback_query else "other"}'
         )
-
         bot.process_new_updates([update])
-
     except Exception:
         logger.exception('Error processing update')
 
     return 'OK', 200
 
 
-def local_run():
+def local_run() -> None:
     """Local long polling."""
     logger.info('Starting bot in local polling mode...')
-    
     try:
         bot.remove_webhook()
         logger.info('Webhook removed. Starting infinity polling.')
-        
-        bot.infinity_polling(
-            timeout=100,
-            long_polling_timeout=100
-        )
+        bot.infinity_polling(timeout=100, long_polling_timeout=100)
     except Exception:
         logger.exception('Bot stopped due to an unexpected error in local polling')
 

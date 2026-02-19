@@ -13,7 +13,7 @@ Bot link: https://telegram.me/skbweatherbot
 ├── ARCHITECTURE.md                 # Architecture documentation
 └── src/                            # Source code
     ├── main.py                     # Main entry point
-    ├── config.py                   # Configuration and environment variables
+    ├── config.py                   # Configuration, environment variables, sticker IDs
     ├── requirements.txt            # Python dependencies
     ├── handlers/                   # Message and command handlers
     │   ├── __init__.py
@@ -24,7 +24,8 @@ Bot link: https://telegram.me/skbweatherbot
     │   └── callbacks.py            # Inline button callback handlers
     ├── services/                   # Business logic
     │   ├── __init__.py
-    │   └── weather_service.py      # Weather API integration & geo info (country, state)
+    │   ├── weather_service.py      # Weather API integration & geo info (country, state)
+    │   └── weather_formatter.py    # Weather data formatting for Telegram messages
     └── utils/                      # Helper functions
         ├── __init__.py
         └── bot_helpers.py          # Bot utility functions (retry, keyboards, emoji, localization)
@@ -133,4 +134,3 @@ Cloud Build substitution variables:
 ### Error Handling
 - **Retry mechanism**: automatic retry for failed API calls
 - **Graceful degradation**: user-friendly error messages
-- **Service availability checks**: validates API status before requests
