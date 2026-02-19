@@ -45,7 +45,8 @@ OpenWeatherMap  Retry Logic  Keyboards
 src/main.py
 ├── src/config.py (settings)
 ├── src/services/weather_service.py
-│   └── src/config.py
+│   ├── src/config.py
+│   └── src/utils/bot_helpers.py
 ├── src/handlers/commands.py
 │   ├── src/handlers/base.py
 │   ├── src/handlers/messages_text.py
@@ -53,6 +54,7 @@ src/main.py
 │   └── src/utils/bot_helpers.py
 ├── src/handlers/messages.py
 │   ├── src/handlers/base.py
+│   ├── src/config.py
 │   ├── src/services/weather_service.py
 │   └── src/utils/bot_helpers.py
 └── src/handlers/callbacks.py
@@ -64,14 +66,16 @@ src/handlers/messages_text.py
 └── (no dependencies - pure text templates)
 
 src/handlers/base.py
-├── src/utils/bot_helpers.py
-└── src/config.py
+├── src/config.py
+├── src/handlers/messages_text.py
+└── src/utils/bot_helpers.py
 
 src/utils/bot_helpers.py
-└── (no dependencies - pure utilities)
+└── emoji, babel.dates (external libraries)
 
 src/services/weather_service.py
-└── src/config.py
+├── src/config.py
+└── src/utils/bot_helpers.py
 
 src/config.py
 └── (no dependencies - pure configuration)
@@ -90,33 +94,37 @@ src/config.py
                           │
         ┌─────────────────┼─────────────────┐
         ↓                 ↓                 ↓
-┌──────────────┐  ┌───────────────┐  ┌───────────────┐
-│WeatherService│  │CommandHandlers│  │MessageHandlers│
-├──────────────┤  ├───────────────┤  ├───────────────┤
-│+ owm         │  │+ bot          │  │+ bot          │
-│+ tz_finder   │  │+ weather      │  │+ weather      │
-├──────────────┤  ├───────────────┤  ├───────────────┤
-│+ is_online() │  │+ handle_start │  │+ handle_      │
-│+ get_current │  │+ handle_help  │  │  weather_req  │
-│+ get_forecast│  │+ handle_      │  │+ handle_wrong │
-│+ format_*()  │  │  forecast     │  │  _content     │
-└──────────────┘  └───────────────┘  └───────────────┘
-                          │                 │
-                          ↓                 ↓
-                  ┌────────────────┐  ┌───────────────┐
-                  │CallbackHandlers│  │  BaseHandler  │
-                  ├────────────────┤  ├───────────────┤
-                  │+ bot           │  │+ bot          │
-                  │+ cmd_handlers  │  ├───────────────┤
-                  ├────────────────┤  │+ send_response│
-                  │+ handle_       │  │+ send_help    │
-                  │  callback      │  │+ send_author  │
-                  └────────────────┘  │+ send_service │
-                          ↑           │  _unavailable │
-                          │           │+ send_city_   │
-                          └───────────│  not_found    │
-                                      └───────────────┘
-                                      
+┌────────────────────┐  ┌─────────────────────┐  ┌───────────────────┐
+│  WeatherService    │  │  CommandHandlers    │  │  MessageHandlers  │
+├────────────────────┤  ├─────────────────────┤  ├───────────────────┤
+│+ owm               │  │+ bot                │  │+ bot              │
+│+ mgr               │  │+ weather            │  │+ weather          │
+│+ geo_mgr           │  ├─────────────────────┤  ├───────────────────┤
+│+ tz_finder         │  │+ handle_start()     │  │+ handle_weather   │
+├────────────────────┤  │+ handle_location()  │  │  _request()       │
+│+ is_online()       │  │+ handle_forecast    │  │+ handle_wrong     │
+│+ get_current       │  │  _command()         │  │  _content()       │
+│  _weather()        │  │+ handle_forecast    │  └───────────────────┘
+│+ get_forecast()    │  │  _input()           │          │
+│+ format_current    │  │+ handle_help()      │          │
+│  _weather()        │  │+ handle_author()    │          │
+│+ format_forecast() │  └─────────────────────┘          │
+│+ icon_handler()    │          │                        │
+│- _get_geo_info()   │          ↓                        ↓
+│- _country_flag()   │  ┌────────────────────┐  ┌───────────────────┐
+└────────────────────┘  │ CallbackHandlers   │  │    BaseHandler    │
+                        ├────────────────────┤  ├───────────────────┤
+                        │+ bot               │  │+ bot              │
+                        │+ command_handlers  │  ├───────────────────┤
+                        ├────────────────────┤  │+ send_response()  │
+                        │+ handle_callback() │  │+ send_service     │
+                        └────────────────────┘  │  _unavailable()   │
+                                ↑               │+ send_city        │
+                                │               │  _not_found()     │
+                                └───────────────│+ send_help()      │
+                                                │+ send_author()    │
+                                                │+ get_username()   │
+                                                └───────────────────┘
 ```
 
 ## Request Flow Examples
@@ -241,6 +249,6 @@ Bot live and receiving updates
 4. **Dependency Injection**: Services and handlers passed to constructors
 5. **Factory Pattern**: Keyboard creation functions
 6. **Retry Pattern**: Generic retry wrapper
-7. **Template Method**: Format methods in WeatherService
+7. **Formatter Methods**: Dedicated formatting methods in WeatherService
 8. **Strategy Pattern**: Different handlers for different message types
 9. **Facade Pattern**: bot_helpers simplifies complex operations
