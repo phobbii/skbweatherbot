@@ -111,18 +111,18 @@ src/config.py
 │+ format_forecast() │  └─────────────────────┘          │
 │+ icon_handler()    │          │                        │
 │- _get_geo_info()   │          ↓                        ↓
-│- _country_flag()   │  ┌────────────────────┐  ┌───────────────────┐
-└────────────────────┘  │ CallbackHandlers   │  │    BaseHandler    │
-                        ├────────────────────┤  ├───────────────────┤
-                        │+ bot               │  │+ bot              │
-                        │+ command_handlers  │  ├───────────────────┤
-                        ├────────────────────┤  │+ send_response()  │
-                        │+ handle_callback() │  │+ send_service     │
-                        └────────────────────┘  │  _unavailable()   │
-                                ↑               │+ send_city        │
-                                │               │  _not_found()     │
-                                └───────────────│+ send_help()      │
-                                                │+ send_author()    │
+│- _resolve          │  ┌────────────────────┐  ┌───────────────────┐
+│  _timezone()       │  │ CallbackHandlers   │  │    BaseHandler    │
+│- _get_observation()│  ├────────────────────┤  ├───────────────────┤
+│- _get_forecaster() │  │+ bot               │  │+ bot              │
+│- _format_location  │  │+ command_handlers  │  ├───────────────────┤
+│  _header()         │  ├────────────────────┤  │+ send_response()  │
+│- _country_flag()   │  │+ handle_callback() │  │+ send_service     │
+└────────────────────┘  │- _DISPATCH (dict)  │  │  _unavailable()   │
+                        └────────────────────┘  │+ send_city        │
+                                ↑               │  _not_found()     │
+                                │               │+ send_help()      │
+                                └───────────────│+ send_author()    │
                                                 │+ get_username()   │
                                                 └───────────────────┘
 ```
@@ -165,7 +165,7 @@ src/config.py
 2. Telegram → Webhook → Cloud Function → webhook_run(request)
 3. Validate POST method & secret token
 4. src/main.py → callback_query() → CallbackHandlers.handle_callback()
-5. CallbackHandlers → _handle_forecast_callback()
+5. CallbackHandlers → _DISPATCH → _on_forecast()
 6. CallbackHandlers → bot_helpers.create_location_keyboard()
 7. CallbackHandlers → bot_helpers.send_message()
 8. CallbackHandlers → bot.register_next_step_handler()

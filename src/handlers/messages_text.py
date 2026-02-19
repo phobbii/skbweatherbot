@@ -1,4 +1,5 @@
 """Message text constants for bot responses."""
+from typing import Sequence
 
 # Sticker IDs
 STICKER_HELP = 'CAADAgADxwIAAvnkbAABx601cOaIcf8WBA'
@@ -14,7 +15,7 @@ AUTHOR_INFO = (
     "\U0001F537 Telegram: @phobbii"
 )
 
-# Common instructions
+# Instruction fragments
 INSTRUCTION_LOCATION = "\U0001F537 Прогноз по местоположению - /location.\n"
 INSTRUCTION_FORECAST = "\U0001F537 Прогноз на 5 дней - /forecast.\n"
 INSTRUCTION_HELP = "\U0001F537 Помощь - /help.\n"
@@ -32,54 +33,52 @@ MSG_PRESS_LOCATION_BUTTON = "{username}, нажмите на кнопку '\U000
 MSG_ENTER_CITY_OR_LOCATION = "{username}, введите город для получения прогноза на 5 дней или\nнажмите '\U0001F310 location' для отправки местоположения\n"
 MSG_SERVICE_UNAVAILABLE = "{username}, прошу прощения, в данный момент сервис погоды не доступен!\nПопробуйте позже\n"
 
-# Start message
+
+def _build_message(*parts: str) -> str:
+    """Concatenate message parts."""
+    return "".join(parts)
+
+
 def get_start_message(username: str) -> str:
     """Get start command message."""
-    return (
-        f"Привет {username}.\n"
+    return _build_message(
+        f"Привет {username}.\n",
         "\U0001F537 Введите город латиницей для получения погоды или\n"
-        "отправьте текущее местоположение - /location.\n"
-        f"{INSTRUCTION_FORECAST}"
-        f"{INSTRUCTION_HELP}"
-        f"{INSTRUCTION_AUTHOR}"
+        "отправьте текущее местоположение - /location.\n",
+        INSTRUCTION_FORECAST,
+        INSTRUCTION_HELP,
+        INSTRUCTION_AUTHOR,
     )
 
-# Help message
+
 def get_help_message(username: str) -> str:
     """Get help message."""
-    return (
-        f"{MSG_ENTER_CITY_LATIN.format(username=username)}"
-        f"{MSG_EXAMPLE_CITY}"
-        f"{INSTRUCTION_LOCATION}"
-        f"{INSTRUCTION_FORECAST}"
-        f"{INSTRUCTION_AUTHOR}"
+    return _build_message(
+        MSG_ENTER_CITY_LATIN.format(username=username),
+        MSG_EXAMPLE_CITY,
+        INSTRUCTION_LOCATION,
+        INSTRUCTION_FORECAST,
+        INSTRUCTION_AUTHOR,
     )
 
-# City not found message
-def get_city_not_found_message(city: str) -> str:
-    """Get city not found message."""
-    return (
-        f"{MSG_CITY_NOT_FOUND.format(city=city)}"
-        f"{INSTRUCTION_LOCATION}"
-        f"{INSTRUCTION_FORECAST}"
-        f"{INSTRUCTION_HELP}"
-    )
 
-# Forecast help message
+def get_city_not_found_message(city: str, instructions: Sequence[str] = ()) -> str:
+    """Get city not found message with configurable instructions.
+
+    Args:
+        city: City name that was not found.
+        instructions: Instruction lines to append. Defaults to standard set.
+    """
+    if not instructions:
+        instructions = (INSTRUCTION_LOCATION, INSTRUCTION_FORECAST, INSTRUCTION_HELP)
+    return _build_message(MSG_CITY_NOT_FOUND.format(city=city), *instructions)
+
+
 def get_forecast_help_message(username: str) -> str:
     """Get forecast help message."""
-    return (
-        f"{MSG_ENTER_CITY_LATIN.format(username=username)}"
-        f"{MSG_EXAMPLE_CITY}"
-        f"{INSTRUCTION_LOCATION_BUTTON}"
-        f"{INSTRUCTION_AUTHOR_BUTTON}"
-    )
-
-# Forecast city not found message
-def get_forecast_city_not_found(city: str) -> str:
-    """Get forecast city not found message."""
-    return (
-        f"{MSG_CITY_NOT_FOUND.format(city=city)}"
-        f"{INSTRUCTION_LOCATION_BUTTON}"
-        f"{INSTRUCTION_HELP_BUTTON}"
+    return _build_message(
+        MSG_ENTER_CITY_LATIN.format(username=username),
+        MSG_EXAMPLE_CITY,
+        INSTRUCTION_LOCATION_BUTTON,
+        INSTRUCTION_AUTHOR_BUTTON,
     )
